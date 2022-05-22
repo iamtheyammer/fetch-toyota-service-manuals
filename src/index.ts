@@ -3,12 +3,15 @@ import login from "./api/login";
 import { join, resolve } from "path";
 import { mkdir } from "fs/promises";
 import downloadEWD from "./ewd";
+import downloadGenericManual from "./genericManual";
+import {chromium, Cookie} from "playwright";
+import {jar} from "./api/client";
+import dayjs from "dayjs";
 
 async function run({ manual, email, password }: CLIArgs) {
   // sort manuals and make sure that they're valid (ish)
   const ewds: string[] = [];
-  const collisionManuals: string[] = [];
-  const repairManuals: string[] = [];
+  const genericManuals: string[] = [];
 
   const manualIds = manual.map((m) => m.toUpperCase().trim());
 
@@ -20,11 +23,11 @@ async function run({ manual, email, password }: CLIArgs) {
         return;
       }
       case "RM": {
-        repairManuals.push(m);
+        genericManuals.push(m);
         return;
       }
       case "BM": {
-        collisionManuals.push(m);
+        genericManuals.push(m);
         return;
       }
       default: {
@@ -36,7 +39,6 @@ async function run({ manual, email, password }: CLIArgs) {
     }
   });
 
-  console.log("Creating directories for manuals...");
   // create directories
   const dirPaths: { [manualId: string]: string } = Object.fromEntries(
     manualIds.map((m) => [m, resolve(join(".", "manuals", m))])
@@ -63,12 +65,58 @@ async function run({ manual, email, password }: CLIArgs) {
     return;
   }
 
+  console.log("Setting up Playwright...");
+  const browser = await chromium.launch({
+    headless: true
+  });
+
+  const transformedCookies: Cookie[] = jar.toJSON().cookies.map(c => ({
+    name: c.key,
+    value: c.value,
+    domain: "techinfo.toyota.com",
+    // for some reason, we have to do this-- otherwise, the iPlanetDirectoryPro
+    // cookie isn't sent, which means that the session isn't working
+    secure: true,
+    sameSite: "None",
+    path: c.path,
+    httpOnly: false,
+    // expires: c.expires ? dayjs(c.expires).unix() : dayjs().add(1, "day").unix()
+    expires: dayjs().add(1, "day").unix()
+  }));
+
+  const page = await browser.newPage({
+    acceptDownloads: false,
+    storageState: {
+      cookies: transformedCookies,
+      origins: []
+    }
+  });
+
+  console.log("Checking that Playwright is logged in...");
+  const resp = await page.goto("https://techinfo.toyota.com/t3Portal/", {
+    waitUntil: "commit"
+  });
+  if(!resp || !resp.url().endsWith("t3Portal/")) {
+    throw new Error(`Doesn't appear we're logged into TIS, we're at ${resp ? resp.url() : "unknown URL"}`)
+  }
+
   console.log("Beginning manual downloads...");
   // begin downloads
   for (const ewdIdx in ewds) {
     const ewdId = ewds[ewdIdx];
+    console.log(`Downloading ${ewdId}... (type = ewd)`)
     await downloadEWD(ewdId, dirPaths[ewdId]);
   }
+
+  // download other manuals - requires playwright
+  for (const manualIdx in genericManuals) {
+    const manualId = genericManuals[manualIdx];
+    console.log(`Downloading ${manualId}... (type = generic)`)
+    await downloadGenericManual(page, manualId, dirPaths[manualId])
+  }
+
+  console.log("All manuals downloaded!");
+  process.exit(0);
 }
 
 const args = processCLIArgs();

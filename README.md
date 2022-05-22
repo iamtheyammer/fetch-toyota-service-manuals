@@ -1,5 +1,5 @@
 # fetch-toyota-service-manusls
- Downloads HTML and PDF versions of Toyota Service Manuals from TIS.
+ Downloads PDF versions of Toyota Service Manuals from TIS.
 
 Bought a 48-hour subscription to Toyota's Service Manuals (Tech Info) and want to save manuals permanently?
 Here's the repo for you.

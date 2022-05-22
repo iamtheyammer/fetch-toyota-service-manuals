@@ -85,6 +85,17 @@ The script automatically removes the `YEAR MY MODEL [00/0000 -      ]` text from
 
 Questions I think someone might ask, not questions anyone has ever asked before.
 
+### Why does Node spit out a certificate warning?
+
+You might see a warning like the following print out after `Logging into TIS...`:
+```
+(node:94450) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.
+(Use `node --trace-warnings ...` to show where the warning was created)
+```
+
+Node.js doesn't seem to accept Toyota's SSL certificate, so this is required to stop Axios
+(which is used for login and downloading EWDs) from failing every request.
+
 ### Which vehicles does this work with?
 
 All the ones I've tested. Just for fun, I tried:
@@ -94,6 +105,15 @@ All the ones I've tested. Just for fun, I tried:
 - 2021 Tacoma
 
 All worked flawlessly!
+
+### How do you avoid the one-session-at-a-time requirement when using Playwright _and_ axios?
+
+Long question, short answer-- I copy the cookies from Axios
+(which captures them using `axios-cookiejar-support` and `tough-cookie`),
+then import them into Playwright when creating the browser session. See [`src/index.ts`](src/index.ts)
+to see the cookie-copying code.
+
+Since they're the same cookies, Toyota sees it as the same session.
 
 ### Why did you make this?
 

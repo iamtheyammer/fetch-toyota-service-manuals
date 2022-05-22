@@ -44,10 +44,11 @@ Since this project uses Playwright (a headless browser interop library), we'll n
 5. Click the `RM` (repair manual) tab.
 6. Click any document that appears.
 7. In the URL of the pop-out window, copy the `RM12345`-like code.
-The full URL should be something like `https://techinfo.toyota.com/t3Portal/document/rm/THIS IS THE CODE/...`.
+The full URL should be something like `https://techinfo.toyota.com/t3Portal/resources/jsp/siviewer/index.jsp?dir=rm/THIS IS THE CODE&href=xhtml/....`.
 8. Save this code for later-- you'll need it!
 9. Close the pop-out window, and go back to TIS.
 10. Click the `EWD` (electrical wiring diagram) tab.
+The full URL should be something like `https://techinfo.toyota.com/t3Portal/ewdappu/index.jsp?ewdNo=THIS IS THE CODE&model=Prius...`
 11. In the URL of the pop-out window, copy the `EM12345`-like code.
 12. Save the code for later.
 13. If you want diagrams for more cars, repeat those steps for each car.

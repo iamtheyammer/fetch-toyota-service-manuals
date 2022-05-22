@@ -43,14 +43,16 @@ export default function parseToC(tocXml: string): ParsedToC {
   return toc;
 }
 
-function getItemPath(
-  item: ItemElement,
-  currentPath: string[] = []
-): {
+interface ItemPath {
   path: string[];
   filename: string;
   url: string;
-}[] {
+}
+
+function getItemPath(
+  item: ItemElement,
+  currentPath: string[] = []
+): ItemPath[] {
   if (!item.item) {
     return [
       {
@@ -62,7 +64,11 @@ function getItemPath(
   }
 
   if (Array.isArray(item.item)) {
-    return item.item.map((i) => getItemPath(i, currentPath)[0]);
+    const items: ItemPath[] = [];
+    for (const subItemElement of item.item) {
+      items.push(...getItemPath(subItemElement, [...currentPath, item.name._text]))
+    }
+    return items;
   }
 
   // we are on a parent node

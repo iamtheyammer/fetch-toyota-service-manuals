@@ -80,7 +80,6 @@ on the sidebar of TIS.
 
 For example, if a manual page is at `Engine-Hybrid System -> 1AB-CDE COOLING -> COMPONENTS`, you'll find its
 downloaded equivalent at `manuals/MANUALID/Engine-Hybrid System/1AB-CDE COOLING/COMPONENTS.pdf`.
-The script automatically removes the `YEAR MY MODEL [00/0000 -      ]` text from the end of page names.
 
 ## FAQ
 
@@ -103,6 +102,7 @@ All the ones I've tested. Just for fun, I tried:
 
 - 2005 Prius
 - 2015 Prius
+- 2017 Prius
 - 2021 Tacoma
 
 All worked flawlessly!

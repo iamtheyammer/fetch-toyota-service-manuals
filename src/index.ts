@@ -13,7 +13,7 @@ async function run({ manual, email, password }: CLIArgs) {
   const ewds: string[] = [];
   const genericManuals: string[] = [];
 
-  const manualIds = manual.map((m) => m.toUpperCase().trim());
+  const manualIds = new Set(manual.map((m) => m.toUpperCase().trim()));
 
   console.log("Parsing manual IDs...");
   manualIds.forEach((m) => {
@@ -41,7 +41,7 @@ async function run({ manual, email, password }: CLIArgs) {
 
   // create directories
   const dirPaths: { [manualId: string]: string } = Object.fromEntries(
-    manualIds.map((m) => [m, resolve(join(".", "manuals", m))])
+    Array.from(manualIds).map((m) => [m, resolve(join(".", "manuals", m))])
   );
 
   try {

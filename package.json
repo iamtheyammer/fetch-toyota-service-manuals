@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "repository": "https://github.com/iamtheyammer/fetch-toyota-service-manuals",
   "author": "Sam <iamtheyammer@gmail.com>",
-  "license": "GPL-v3.0",
+  "license": "GPL-3.0",
   "private": false,
   "dependencies": {
     "axios": "^0.27.2",

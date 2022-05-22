@@ -58,7 +58,7 @@ async function recursivelyDownloadManual(
     const [name, value] = exploded[explIdx];
 
     if (typeof value === "string") {
-      const sanitizedName = name.split(";")[0].replace(/\//g, "-");
+      const sanitizedName = name.replace(/\//g, "-");
       const sanitizedPath = `${join(path, sanitizedName)}.pdf`;
       console.log(`Downloading page ${sanitizedName}...`);
 
@@ -92,6 +92,7 @@ async function recursivelyDownloadManual(
 
     // create folder
     const newPath = join(path, name.replace(/\//g, "-"));
+    if(newPath.includes("undefined")) debugger;
     try {
       await mkdir(newPath, { recursive: true });
     } catch (e) {

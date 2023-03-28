@@ -4,43 +4,42 @@ import { mkdir, writeFile } from "fs/promises";
 import { join } from "path";
 import parseToC, { ParsedToC } from "./parseToC";
 import { Page } from "playwright";
+import { Manual } from "..";
 
 export default async function downloadGenericManual(
   page: Page,
-  manualId: string,
+  manualData: Manual,
   path: string
 ) {
-  const doctype = manualId.slice(0, 2).toLowerCase();
-
   // download ToC
   let tocReq: AxiosResponse;
   try {
     console.log("Downloading table of contents...");
     tocReq = await client({
       method: "GET",
-      url: `${doctype}/${manualId}/toc.xml`,
+      url: `${manualData.type}/${manualData.id}/toc.xml`,
       // we don't want axios to parse this
       responseType: "text",
     });
   } catch (e: any) {
     if (e.response && e.response.status === 404) {
       throw new Error(
-        `Manual ${manualId} doesn't appear to exist-- are you sure the ID is right?`
+        `Manual ${manualData.id} doesn't appear to exist-- are you sure the ID is right?`
       );
     }
 
     throw new Error(
-      `Unknown error getting title XML for manual ${manualId}: ${e}`
+      `Unknown error getting title XML for manual ${manualData.raw}: ${e}`
     );
   }
 
-  const files = parseToC(tocReq.data);
+  const files = parseToC(tocReq.data, manualData.year);
 
   // write to disk
   console.log("Saving table of contents...");
   await Promise.all([
-    writeFile(join(path, "toc.xml"), tocReq.data),
-    writeFile(join(path, "toc.json"), JSON.stringify(files, null, 2)),
+    writeFile(join(path, "toc-full.xml"), tocReq.data),
+    writeFile(join(path, "toc-downloaded.json"), JSON.stringify(files, null, 2)),
   ]);
 
   console.log("Downloading full manual...");
@@ -92,7 +91,7 @@ async function recursivelyDownloadManual(
 
     // create folder
     const newPath = join(path, name.replace(/\//g, "-"));
-    if(newPath.includes("undefined")) debugger;
+    if (newPath.includes("undefined")) debugger;
     try {
       await mkdir(newPath, { recursive: true });
     } catch (e) {

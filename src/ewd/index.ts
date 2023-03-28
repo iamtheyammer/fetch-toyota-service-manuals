@@ -4,8 +4,9 @@ import { client } from "../api/client";
 import { AxiosResponse } from "axios";
 import parseTitle from "./parseTitle";
 import saveStream from "../api/saveStream";
+import { Manual } from "..";
 
-export default async function downloadEWD(manualId: string, path: string) {
+export default async function downloadEWD(manualData: Manual, path: string) {
   const parts = ["system", "routing", "overall"];
 
   // download
@@ -27,26 +28,30 @@ export default async function downloadEWD(manualId: string, path: string) {
     try {
       titleReq = await client({
         method: "GET",
-        url: `ewdappu/${manualId}/ewd/contents/${part}/title.xml`,
+        url: `ewdappu/${manualData.id}/ewd/contents/${part}/title.xml`,
         // we don't want axios to parse this
         responseType: "text",
       });
     } catch (e: any) {
       if (e.response && e.response.status === 404) {
         throw new Error(
-          `EWD ${manualId} doesn't appear to exist-- are you sure the ID is right?`
+          `EWD ${manualData.id} doesn't appear to exist-- are you sure the ID is right?`
         );
       }
 
       throw new Error(
-        `Unknown error getting title XML for EWD ${manualId}: ${e}`
+        `Unknown error getting title XML for EWD ${manualData.id}: ${e}`
       );
     }
 
+    const files = await parseTitle(titleReq.data);
+
     // write to disk
     await writeFile(join(partPath, "title.xml"), titleReq.data);
-
-    const files = await parseTitle(titleReq.data);
+    await writeFile(
+      join(partPath, "title.json"),
+      JSON.stringify(files, null, 2)
+    );
 
     for (const fileName in files) {
       const path = files[fileName];
@@ -55,12 +60,12 @@ export default async function downloadEWD(manualId: string, path: string) {
       const isPdf = fileExt === "pdf";
 
       console.log(
-        `Downloading ${manualId} ${part} ${fileName} as ${fileExt}...`
+        `Downloading ${manualData.id} ${part} ${fileName} as ${fileExt}...`
       );
 
       const fileReq = await client({
         method: "GET",
-        url: `ewdappu/${manualId}/ewd/contents/${part}/${
+        url: `ewdappu/${manualData.id}/ewd/contents/${part}/${
           isPdf ? "pdf" : "fig"
         }/${path}`,
         responseType: isPdf ? "stream" : "text",

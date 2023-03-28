@@ -6,6 +6,7 @@ export interface ParsedToC {
 
 interface ItemElement {
   item?: ItemElement | ItemElement[];
+  tocdata?: ToCData;
   name: {
     _text: string;
   };
@@ -14,7 +15,10 @@ interface ItemElement {
   };
 }
 
-export default function parseToC(tocXml: string): ParsedToC {
+export default function parseToC(
+  tocXml: string,
+  modelYear?: number
+): ParsedToC {
   const xmlobj = xml2js(tocXml, {
     compact: true,
     trim: true,
@@ -31,7 +35,7 @@ export default function parseToC(tocXml: string): ParsedToC {
   const toc: ParsedToC = {};
 
   bookItems.forEach((item) => {
-    const itemPath = getItemPath(item, []);
+    const itemPath = getItemPath(item, [], modelYear);
 
     itemPath.forEach((ip) => {
       // add item to the ToC, final object's value is the path, key is the filename
@@ -43,6 +47,24 @@ export default function parseToC(tocXml: string): ParsedToC {
   return toc;
 }
 
+interface ToCData {
+  _attributes: {
+    fromyear: string;
+    toyear: string;
+  };
+}
+
+function tocdataIsApplicable(tocdata: ToCData, year: number): boolean {
+  if (!tocdata) {
+    return true;
+  }
+
+  const fromYear = parseInt(tocdata._attributes.fromyear);
+  const toYear = parseInt(tocdata._attributes.toyear);
+
+  return year >= fromYear && year <= toYear;
+}
+
 interface ItemPath {
   path: string[];
   filename: string;
@@ -51,9 +73,73 @@ interface ItemPath {
 
 function getItemPath(
   item: ItemElement,
-  currentPath: string[] = []
+  currentPath: string[] = [],
+  year?: number
 ): ItemPath[] {
-  if (!item.item) {
+  let subitem = item.item; // needed if year specified
+
+  // VERY CAREFULLY check tocdata and remove pages that don't apply to specified year
+  if (year && item.tocdata) {
+    // if it's not an array
+    if (!Array.isArray(item.tocdata)) {
+      // and it's not applicable
+      if (!tocdataIsApplicable(item.tocdata, year)) {
+        // return
+        console.log(
+          `Skipping page ${item.name._text} (solo) and its children because it's not applicable to year ${year}.`
+        );
+        return [];
+      }
+    } else {
+      // it's an array
+      // item.tocdata[0] is for item, item.tocdata[1] is for item.item, etc.
+      const itemtocdata = item.tocdata[0]; // equivalent of item.tocdata
+      const subitemtocdatas = item.tocdata.slice(1); // equivalent of item.item[0].tocdata
+
+      // first, check if the item is applicable
+      if (!tocdataIsApplicable(itemtocdata, year)) {
+        // if it's not applicable, stop
+        console.log(
+          `Skipping page ${item.name._text} (array) and its children because it's not applicable to year ${year}.`
+        );
+        return [];
+      }
+
+      // if so, check which children are applicable.
+      // but, if subitemtocdatas.length = 1, then we can just check if it's applicable
+      if (subitemtocdatas.length === 1) {
+        if (!tocdataIsApplicable(subitemtocdatas[0], year)) {
+          console.log(
+            `Skipping page ${item.name._text} (sub-single) and its children because it's not applicable to year ${year}.`
+          );
+          return [];
+        }
+      } else {
+        // if there are multiple subitems, we need to check which ones are applicable
+        // item.item[0] should coorespond to subitemtocdatas[0], etc.
+        subitem = (item.item as ItemElement[]).filter((itm, idx) =>
+          tocdataIsApplicable(subitemtocdatas[idx], year)
+        );
+
+        const skippedItemCount = subitemtocdatas.length - subitem.length;
+
+        // if there are no applicable subitems, stop
+        if (subitem.length === 0) {
+          console.log(
+            `Skipping page ${item.name._text} (sub-array) and its children because it's not applicable to year ${year}.`
+          );
+          return [];
+        } else if (skippedItemCount > 0) {
+          console.log(
+            `Skipping ${skippedItemCount} pages below ${item.name._text} because they're not applicable to year ${year}.`
+          );
+        }
+      }
+    }
+  }
+
+  // if we are on a leaf node
+  if (!subitem) {
     return [
       {
         path: currentPath,
@@ -63,16 +149,19 @@ function getItemPath(
     ];
   }
 
-  if (Array.isArray(item.item)) {
+  // if not, there may be an array of children...
+  if (Array.isArray(subitem)) {
     const items: ItemPath[] = [];
-    for (const subItemElement of item.item) {
-      items.push(...getItemPath(subItemElement, [...currentPath, item.name._text]))
+    for (const subItemElement of subitem) {
+      items.push(
+        ...getItemPath(subItemElement, [...currentPath, item.name._text], year)
+      );
     }
     return items;
   }
 
-  // we are on a parent node
-  return getItemPath(item.item, [...currentPath, item.name._text]);
+  // or just one child
+  return getItemPath(subitem, [...currentPath, item.name._text], year);
 }
 
 function recursivelyAccessObject(

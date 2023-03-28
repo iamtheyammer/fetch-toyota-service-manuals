@@ -39,7 +39,17 @@ export default async function downloadGenericManual(
   console.log("Saving table of contents...");
   await Promise.all([
     writeFile(join(path, "toc-full.xml"), tocReq.data),
-    writeFile(join(path, "toc-downloaded.json"), JSON.stringify(files, null, 2)),
+    writeFile(
+      join(path, "toc-downloaded.json"),
+      JSON.stringify(files, null, 2)
+    ),
+    writeFile(
+      join(path, "toc.js"),
+      `document.toc = JSON.parse(\`${JSON.stringify(files).replaceAll(
+        '\\"',
+        ""
+      )}\`);`
+    ),
   ]);
 
   console.log("Downloading full manual...");

@@ -1,11 +1,11 @@
-import processCLIArgs, { CLIArgs } from "./processCLIArgs";
+import processCLIArgs, {CLIArgs} from "./processCLIArgs";
 import login from "./api/login";
-import { join, resolve } from "path";
-import { mkdir } from "fs/promises";
+import {join, resolve} from "path";
+import {mkdir, readFile, writeFile} from "fs/promises";
 import downloadEWD from "./ewd";
 import downloadGenericManual from "./genericManual";
-import { chromium, Cookie } from "playwright";
-import { jar } from "./api/client";
+import {chromium, Cookie} from "playwright";
+import {jar} from "./api/client";
 import dayjs from "dayjs";
 
 export interface Manual {
@@ -15,7 +15,7 @@ export interface Manual {
   raw: string; // e.g. EM1234@2019
 }
 
-async function run({ manual, email, password, headed, cookieString }: CLIArgs) {
+async function run({manual, email, password, headed, cookieString}: CLIArgs) {
   // sort manuals and make sure that they're valid (ish)
   const ewds: Manual[] = [];
   const genericManuals: Manual[] = [];
@@ -25,9 +25,9 @@ async function run({ manual, email, password, headed, cookieString }: CLIArgs) {
   console.log("Parsing manual IDs...");
   rawManualIds.forEach((m) => {
     const id = m.includes("@") ? m.split("@")[0] : m;
-    const year = m.includes("@") ? parseInt(m.split("@")[1]) : -1;
+    const year = m.includes("@") ? parseInt(m.split("@")[1]) : undefined;
 
-    if (year !== -1) {
+    if (year && year !== -1) {
       if (isNaN(year)) {
         console.error(`Invalid manual ${m}: the model year must be a number.`);
         process.exit(1);
@@ -85,13 +85,23 @@ async function run({ manual, email, password, headed, cookieString }: CLIArgs) {
 
   try {
     await Promise.all(
-      Object.values(dirPaths).map((m) => mkdir(m, { recursive: true }))
+      Object.values(dirPaths).map((m) => mkdir(m, {recursive: true}))
     );
   } catch (e: any) {
     if (e.code !== "EEXIST") {
       console.error(`Error creating directory: ${e}`);
       process.exit(1);
     }
+  }
+
+  // copy accessor into manuals
+  console.log("Copying accessor into manuals...")
+  try {
+    const accessorHTML = await readFile(join(__dirname, "..", "accessor/index.html"), "utf-8");
+    await Promise.all(
+      Object.values(dirPaths).map((m) => writeFile(join(m, "index.html"), accessorHTML)));
+  } catch (e) {
+    console.error("Unable to copy accessor file into manuals.", e)
   }
 
   console.log("Setting up Playwright...");

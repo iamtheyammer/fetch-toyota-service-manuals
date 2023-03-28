@@ -1,4 +1,4 @@
-# fetch-toyota-service-manusls
+# fetch-toyota-service-manuals
 
 Downloads PDF versions of Toyota Service Manuals from TIS.
 
@@ -96,7 +96,27 @@ on the sidebar of TIS.
 For example, if a manual page is at `Engine-Hybrid System -> 1AB-CDE COOLING -> COMPONENTS`, you'll find its
 downloaded equivalent at `manuals/MANUALID/Engine-Hybrid System/1AB-CDE COOLING/COMPONENTS.pdf`.
 
-For non-electrical manuals, you'll see two "toc" (table of contents) files. `toc-full.xml` contains all of the possible pages in the manual. `toc-downloaded.json` contains the _filtered_ version, if you filtered by year (if you didn't filter by year, it contains all pages). This is useful if you want to see what pages are available for your car (xml) or what the bot downloaded (json).
+For non-electrical manuals, you'll see two "toc" (table of contents) files. `toc-full.xml` contains all of the possible pages in the manual. `toc-downloaded.json` contains the _filtered_ version, if you filtered by year (if you didn't filter by year, it contains all pages). This is useful if you want to see what pages are available for your car (xml) or what the bot downloaded (json). 
+
+`index.html` and `toc.js` files are for the [Manual Locator](#using-the-manual-locator).
+
+## Using the Manual Locator
+
+Sometimes, a procedure will link to another with a blue "INFO" button.
+
+You can use the Manual Locator HTML page to find the page for that procedure:
+
+1. Open `index.html` in your browser of choice by double-clicking it.
+2. Copy the link to TechInfo from the "INFO" button. Often, you can right-click the button to see the link.
+   - If you can't, try opening the PDF in Chrome-- drag it into Chrome from your file browser-- then right-click and "Copy Link Address".
+3. Paste the link into the Manual Locator.
+4. Press "Go" or hit enter.
+5. The requested page will open in your browser.
+
+Pages that had a double quote in their name may not work.
+
+This will only work if `index.html` is in the same directory as `toc.js`, and those files must be at the root of your manual directory.
+(If you don't move any files after downloading, this should be the case.)
 
 ## All command-line options
 

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manual Locator</title>
+    <script src="toc.js"></script>
+</head>
+<body>
+<h1>Manual Locator</h1>
+<p>Paste a URL from TechInfo and we'll open it in your Manual. Copy links from the manual PDFs and paste them here.</p>
+<p>This only works if <code>toc.js</code> is in this folder and we're at the root of the manual.</p>
+<p>Table of contents status: <span id="tocstatus">loading...</span></p>
+<form id="search-form">
+    <input type="text" id="urlbox" placeholder="https://techinfo.toyota.com/t3Portal/document/rm/...">
+    <button type="submit" id="search" disabled>Go</button>
+</form>
+
+<p id="locatorstatus">Enter a TechInfo URL and we'll open it in your manual.</p>
+</body>
+<script src="toc.js"></script>
+<script>
+  let toc = document.toc;
+  if (toc) {
+    // unlock
+    document.getElementById('tocstatus').textContent = "toc.js loaded";
+    document.getElementById('search').disabled = false;
+  } else {
+    document.getElementById('tocstatus').textContent = "couldn't find or there was an error loading toc.js in this directory";
+  }
+
+  function handleClick(e) {
+    e.preventDefault();
+    // read url
+    const url = document.querySelector('input').value;
+    // parse url
+    try {
+      const urlobj = new URL(url);
+      if (urlobj.hostname !== 'techinfo.toyota.com') {
+        document.getElementById('locatorstatus').textContent = 'This is not a TechInfo URL.';
+        return;
+      }
+      const pathname = urlobj.pathname;
+      // search toc
+      const path = searchToC(toc, pathname, []);
+      if (!path) {
+        document.getElementById('locatorstatus').textContent = 'Could not find this page in the manual.';
+        return;
+      }
+      const location = path.map(p => encodeURIComponent(p.replaceAll("/", "-"))).join('/');
+      window.open(`${location}.pdf`);
+    } catch (e) {
+      document.getElementById('locatorstatus').textContent = 'Could not parse the URL.';
+      console.error(e);
+      return;
+    }
+
+    document.getElementById('locatorstatus').textContent = 'OK';
+    document.getElementById("urlbox").value = "";
+    document.getElementById("urlbox").focus();
+  }
+
+  function searchToC(toc, path, objpath = []) {
+    for (const chapter in toc) {
+      if (typeof toc[chapter] === 'string') {
+        if (toc[chapter] === path) {
+          return objpath.concat(chapter);
+        }
+      } else {
+        const result = searchToC(toc[chapter], path, objpath.concat(chapter));
+        if (result) {
+          return result;
+        }
+      }
+    }
+  }
+
+  document.getElementById("search-form").addEventListener("submit", handleClick);
+</script>
+</html>

@@ -9,7 +9,7 @@ import {jar} from "./api/client";
 import dayjs from "dayjs";
 
 export interface Manual {
-  type: "em" | "rm" | "bm";
+  type: "em" | "rm" | "bm" | "ncf";
   id: string; // e.g. EM1234
   year?: number; // e.g. 2019
   raw: string; // e.g. EM1234@2019
@@ -66,9 +66,18 @@ async function run({manual, email, password, headed, cookieString}: CLIArgs) {
         });
         return;
       }
+      case "NM": {
+        genericManuals.push({
+          type: "ncf",
+          id,
+          year,
+          raw: m,
+        });
+        return;
+      }
       default: {
         console.error(
-          `Invalid manual ${m}: manual IDs must start with EM, RM, or BM.`
+          `Invalid manual ${m}: manual IDs must start with EM, RM, BM or NM.`
         );
         process.exit(1);
       }

@@ -138,14 +138,13 @@ async function run({manual, email, password, headed, cookieString}: CLIArgs) {
   } else if (cookieString) {
     console.log("Using cookies from command line...");
 
-    // parse cookie string
-    const cookieStrings = cookieString.split("; ");
-    // transform cookie strings into cookie objects
-    transformedCookies = cookieStrings.map((c) => {
-      const [name, value] = c.split("=");
-      return {
-        name,
-        value,
+    // Parse and sanitize cookie string
+    transformedCookies = cookieString
+      .split(";") // Split into individual cookies
+      .map((cookie) => cookie.split("=")) // Split into [name, value]
+      .map(([name, value]) => ({
+        name: name.trim(),
+        value: value.trim(),
         domain: "techinfo.toyota.com",
         // for some reason, we have to do this-- otherwise, the iPlanetDirectoryPro
         // cookie isn't sent, which means that the session isn't working
@@ -153,9 +152,8 @@ async function run({manual, email, password, headed, cookieString}: CLIArgs) {
         sameSite: "None",
         path: "/",
         httpOnly: false,
-        expires: dayjs().add(1, "day").unix(),
-      };
-    });
+        expires: dayjs().add(1, "day").unix(), // Adjust expiration as needed
+      }));
 
     // add cookies to axios jar
     transformedCookies.forEach((c) => {

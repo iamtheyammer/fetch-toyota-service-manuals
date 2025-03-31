@@ -5,6 +5,7 @@ import { join } from "path";
 import parseToC, { ParsedToC } from "./parseToC";
 import { Page } from "playwright";
 import { Manual } from "..";
+import { existsSync } from "fs";
 
 export default async function downloadGenericManual(
   page: Page,
@@ -69,9 +70,14 @@ async function recursivelyDownloadManual(
     if (typeof value === "string") {
       const sanitizedName = name.replace(/\//g, "-");
       const sanitizedPath = `${join(path, sanitizedName)}.pdf`;
-      console.log(`Downloading page ${sanitizedName}...`);
+
+      if (existsSync(sanitizedPath)) {
+        console.log(`Skipping existing file ${sanitizedPath}`);
+        continue;
+      }
 
       // download page
+      console.log(`Downloading page ${sanitizedName}...`);
       try {
         await page.goto(`https://techinfo.toyota.com${value}`, {
           waitUntil: "load",

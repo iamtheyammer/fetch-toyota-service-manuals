@@ -8,7 +8,7 @@
   "license": "GPL-3.0",
   "private": false,
   "dependencies": {
-    "axios": "^0.27.2",
+    "axios": "^1.8.4",
     "axios-cookiejar-support": "^4.0.1",
     "command-line-args": "^5.2.1",
     "command-line-usage": "^6.1.3",

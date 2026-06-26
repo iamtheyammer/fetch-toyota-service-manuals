@@ -9,6 +9,16 @@ These manuals are copyrighted by Toyota, so don't share them!
 
 (I've also written a Ford manual downloader, available [here](https://github.com/iamtheyammer/fetch-ford-service-manuals)).
 
+> **📘 Full walkthrough:** Toyota's TIS login has changed since this tool was
+> written, and this fork adds cookie-based authentication, helper tools to
+> extract the session cookie from a HAR (`yarn extract-cookie`), refresh a
+> session by logging in through 2FA (`yarn refresh-session`), and auto-discover
+> a vehicle's manual codes (`yarn lookup-codes`), plus resume support and an
+> archive-packaging step. For a complete, current **setup → authenticate →
+> download → archive** guide (with troubleshooting and a compression-format
+> comparison), see
+> [`docs/downloading-and-zipping-manuals.md`](docs/downloading-and-zipping-manuals.md).
+
 ## Table of Contents
 
 - [Usage](#usage)

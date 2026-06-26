@@ -98,22 +98,24 @@ export default function processCLIArgs(): CLIArgs {
       process.exit(0);
     }
 
-    if (
-      !options.manual ||
-      ((!options.email || !options.password) && !options["cookie-string"])
-    ) {
-      console.error("Missing required args!");
-      // console.log(options);
+    // Resolve each credential from its CLI flag, falling back to the matching
+    // env var, then validate -- so any valid mix (e.g. CLI email + env
+    // password) is accepted consistently with how it is used.
+    const email = options.email || process.env.TIS_EMAIL;
+    const password = options.password || process.env.TIS_PASSWORD;
+    const cookieString = options["cookie-string"] || process.env.TIS_COOKIE;
 
+    if (!options.manual || ((!email || !password) && !cookieString)) {
+      console.error("Missing required args!");
       console.log(usage);
       process.exit(1);
     }
     return {
       manual: options.manual,
-      email: options.email,
-      password: options.password,
+      email,
+      password,
       headed: options.headed,
-      cookieString: options["cookie-string"],
+      cookieString,
     };
   } catch (e: any) {
     console.error(e);

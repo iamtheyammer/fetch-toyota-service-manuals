@@ -30,7 +30,16 @@ export default function parseToC(
   const bookTitle: string = xmlobj.xmltoc.name._text;
 
   // @ts-ignore - see above
-  const bookItems: ItemElement[] = xmlobj.xmltoc.item;
+  const rawBookItems: ItemElement | ItemElement[] = xmlobj.xmltoc.item;
+
+  // Compact XML parsing yields a bare object (not an array) when <xmltoc> has a
+  // single top-level <item> -- as some legacy publications (e.g. the wire-harness
+  // manual RM1022Ea) do. Normalise to an array so the iteration below holds for
+  // both shapes; getItemPath() already handles the single-vs-array case deeper in
+  // the tree.
+  const bookItems: ItemElement[] = Array.isArray(rawBookItems)
+    ? rawBookItems
+    : [rawBookItems];
 
   const toc: ParsedToC = {};
 
@@ -40,7 +49,16 @@ export default function parseToC(
     itemPath.forEach((ip) => {
       // add item to the ToC, final object's value is the path, key is the filename
       const itemDest = recursivelyAccessObject(ip.path, toc);
-      itemDest[ip.filename] = ip.url;
+      // Two sibling leaves can carry an identical display name while pointing at
+      // distinct pages (e.g. the 2002 Highlander repair manual has two different
+      // "...EGR Flow Excessive Monitor (P0402)" pages in one folder). Keying the
+      // ToC purely by name would let the second silently overwrite the first and
+      // drop a page, so disambiguate with a numeric suffix when the key is taken.
+      let key = ip.filename;
+      for (let n = 2; key in itemDest; n++) {
+        key = `${ip.filename} (${n})`;
+      }
+      itemDest[key] = ip.url;
     });
   });
 
@@ -168,7 +186,19 @@ function recursivelyAccessObject(
   keys: string[],
   obj: { [any: string]: any }
 ): { [any: string]: string } {
-  if (!obj[keys[0]]) {
+  const existing = obj[keys[0]];
+  if (typeof existing === "string") {
+    // A folder shares a name with an earlier sibling leaf (a distinct page that
+    // happens to share this folder's title). Descending would overwrite/By the
+    // string and throw; instead relocate the leaf under a disambiguated key so
+    // it survives, then create the folder in its place.
+    let moved = `${keys[0]} (page)`;
+    for (let n = 2; moved in obj; n++) {
+      moved = `${keys[0]} (page ${n})`;
+    }
+    obj[moved] = existing;
+    obj[keys[0]] = {};
+  } else if (!existing) {
     obj[keys[0]] = {};
   }
 

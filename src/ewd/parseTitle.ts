@@ -43,9 +43,20 @@ export default async function parseTitle(
     ignoreDeclaration: true,
   });
 
-  // @ts-ignore - xml2js compact doesn't seem to work well with TS
-  // this gives us the big list of figures
-  const data: TitleElement[] = Object.values(xmlobj.TitleList)[1];
+  // The figure entries live under the first non-metadata child of <TitleList>
+  // (e.g. <System> for system/overall, <Routing> for routing). xml-js prefixes
+  // metadata keys with "_" (_attributes, _instruction, _declaration, _doctype).
+  // Newer TIS XML adds an <?controldate?> instruction, so we can't rely on a
+  // fixed positional index (the old `Object.values(TitleList)[1]` broke on it).
+  // The child may be an array (many entries) or a single object (one entry).
+  const titleList: any = (xmlobj as any).TitleList || {};
+  const entriesKey = Object.keys(titleList).find((k) => !k.startsWith("_"));
+  const rawEntries = entriesKey ? titleList[entriesKey] : undefined;
+  const data: TitleElement[] = Array.isArray(rawEntries)
+    ? rawEntries
+    : rawEntries
+    ? [rawEntries]
+    : [];
 
   const parsedTitle: ParsedTitle = {};
 

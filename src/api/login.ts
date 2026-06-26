@@ -1,4 +1,4 @@
-import { client } from "./client";
+import { client, TIS_ORIGIN } from "./client";
 
 /**
  * login logs in with the user's email and password.
@@ -27,6 +27,6 @@ export default async function login(
   // this request sets the session
   await client({
     method: "GET",
-    url: "https://techinfo.toyota.com/t3Portal/",
+    url: `${TIS_ORIGIN}/t3Portal/`,
   });
 }

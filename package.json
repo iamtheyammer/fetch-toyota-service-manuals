@@ -7,6 +7,7 @@
   "author": "Sam <iamtheyammer@gmail.com>",
   "license": "GPL-3.0",
   "private": false,
+  "packageManager": "yarn@1.22.22",
   "dependencies": {
     "axios": "^0.27.2",
     "axios-cookiejar-support": "^4.0.1",
@@ -31,7 +32,11 @@
   "scripts": {
     "start": "NODE_TLS_REJECT_UNAUTHORIZED=0 ts-node src/index.ts",
     "start:inspect": "NODE_TLS_REJECT_UNAUTHORIZED=0 node -r ts-node/register --inspect-brk src/index.ts",
-    "format": "prettier --write src/**/*.ts",
+    "extract-cookie": "ts-node tools/extractCookie.ts",
+    "lookup-codes": "NODE_TLS_REJECT_UNAUTHORIZED=0 ts-node tools/lookupCodes.ts",
+    "download-documents": "NODE_TLS_REJECT_UNAUTHORIZED=0 ts-node tools/downloadDocuments.ts",
+    "refresh-session": "NODE_TLS_REJECT_UNAUTHORIZED=0 ts-node tools/refreshSession.ts",
+    "format": "prettier --write \"src/**/*.ts\" \"tools/**/*.ts\"",
     "playwright-setup": "playwright install chromium && playwright install-deps chromium",
     "watch": "NODE_TLS_REJECT_UNAUTHORIZED=0 nodemon src/index.ts"
   }

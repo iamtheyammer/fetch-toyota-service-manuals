@@ -95,16 +95,54 @@ async function docsOnPage(page: Page): Promise<FoundDoc[]> {
 }
 
 /** Select a cascading dropdown value and wait for any dependent reload. */
-async function selectAndSettle(page: Page, name: string, value: string) {
+export async function selectAndSettle(page: Page, name: string, value: string) {
   const selector = `select[name="${name}"]`;
   await page.waitForSelector(selector, { timeout: 30000 });
   await Promise.all([
     page.waitForLoadState("domcontentloaded").catch(() => {}),
-    page.selectOption(selector, value).catch((e) => {
-      throw new Error(`Could not select ${name}="${value}": ${e.message}`);
+    page.selectOption(selector, value).catch(async (e: Error) => {
+      // A miss here is nearly always a wrong division/model/year string rather
+      // than a broken page, and Playwright only reports a timeout -- it never
+      // says what the dropdown actually offered. Listing the real options turns
+      // a 30-second dead end into the answer, which matters because TIS
+      // subscriptions are time-boxed. A plain string matches an option by
+      // either its value or its visible label, so both are shown.
+      throw new Error(
+        `Could not select ${name}="${value}": ${e.message.split("\n")[0]}\n` +
+          (await describeOptions(page, selector)),
+      );
     }),
   ]);
   await page.waitForTimeout(SETTLE_MS);
+}
+
+/** Human-readable list of an option list's selectable values, for error messages. */
+async function describeOptions(page: Page, selector: string): Promise<string> {
+  const options = await page
+    .locator(`${selector} option`)
+    .evaluateAll((opts) =>
+      opts.map((o) => ({
+        value: (o as HTMLOptionElement).value,
+        label: (o.textContent ?? "").trim(),
+      })),
+    )
+    .catch(() => [] as { value: string; label: string }[]);
+
+  const selectable = options.filter((o) => o.value !== "");
+  if (!selectable.length) {
+    return (
+      "The dropdown had no options -- the cascading division/model/year lists " +
+      "may not have loaded, or the session may not be valid."
+    );
+  }
+  return (
+    "Available options: " +
+    selectable
+      .map((o) =>
+        o.label && o.label !== o.value ? `${o.value} ("${o.label}")` : o.value,
+      )
+      .join(", ")
+  );
 }
 
 /** Human label for an objType. */

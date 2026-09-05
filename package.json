@@ -33,6 +33,7 @@
     "start": "NODE_TLS_REJECT_UNAUTHORIZED=0 node src/index.ts",
     "start:inspect": "NODE_TLS_REJECT_UNAUTHORIZED=0 node --inspect-brk src/index.ts",
     "test": "node --test test/*.test.ts",
+    "test:browser": "node --test test/browser/*.test.ts",
     "typecheck": "tsc --noEmit",
     "extract-cookie": "node tools/extractCookie.ts",
     "lookup-codes": "NODE_TLS_REJECT_UNAUTHORIZED=0 node tools/lookupCodes.ts",

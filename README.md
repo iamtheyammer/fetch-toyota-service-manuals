@@ -60,7 +60,9 @@ Since this project uses Playwright (a headless browser interop library), we'll n
 ### Development
 
 - `yarn test` runs the offline test suite (Node's built-in test runner; no
-  network or TIS subscription needed).
+  network, browser, or TIS subscription needed).
+- `yarn test:browser` runs tests that drive a local page in real Chromium
+  (still no network or TIS session). They skip if Chromium isn't installed.
 - `yarn typecheck` type-checks with `tsc`. There is no build step-- Node runs
   the TypeScript directly, so `tsc` is only a checker.
 - `yarn format` formats with Prettier.

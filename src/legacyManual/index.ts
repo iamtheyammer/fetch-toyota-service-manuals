@@ -135,7 +135,7 @@ async function recursivelyDownloadLegacyManual(path: string, toc: ParsedToC) {
  * Extract the PDF URL that a legacy wrapper page redirects to, from either its
  * `<link rel="pdf" href="...">` element or its `location="....pdf"` script.
  */
-function extractPdfHref(html: string): string | undefined {
+export function extractPdfHref(html: string): string | undefined {
   const link =
     html.match(/<link[^>]+rel=["']pdf["'][^>]*href=["']([^"']+)["']/i) ||
     html.match(/<link[^>]+href=["']([^"']+)["'][^>]*rel=["']pdf["']/i);

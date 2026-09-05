@@ -21,17 +21,19 @@
   "devDependencies": {
     "@types/command-line-args": "^5.2.0",
     "@types/command-line-usage": "^5.0.2",
-    "@types/node": "^17.0.35",
+    "@types/node": "^26",
     "@types/qs": "^6.9.7",
     "@types/tough-cookie": "^4.0.2",
     "nodemon": "^2.0.16",
     "prettier": "^2.6.2",
     "ts-node": "^10.7.0",
-    "typescript": "^4.6.4"
+    "typescript": "^5.9"
   },
   "scripts": {
     "start": "NODE_TLS_REJECT_UNAUTHORIZED=0 ts-node src/index.ts",
     "start:inspect": "NODE_TLS_REJECT_UNAUTHORIZED=0 node -r ts-node/register --inspect-brk src/index.ts",
+    "test": "node -r ts-node/register --test test/*.test.ts",
+    "typecheck": "tsc --noEmit",
     "extract-cookie": "ts-node tools/extractCookie.ts",
     "lookup-codes": "NODE_TLS_REJECT_UNAUTHORIZED=0 ts-node tools/lookupCodes.ts",
     "download-documents": "NODE_TLS_REJECT_UNAUTHORIZED=0 ts-node tools/downloadDocuments.ts",

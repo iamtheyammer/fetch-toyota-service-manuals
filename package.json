@@ -9,13 +9,13 @@
   "private": false,
   "packageManager": "yarn@1.22.22",
   "dependencies": {
-    "axios": "^0.27.2",
-    "axios-cookiejar-support": "^4.0.1",
+    "axios": "^1.20",
+    "axios-cookiejar-support": "5.0.5",
     "command-line-args": "^5.2.1",
     "command-line-usage": "^6.1.3",
     "dayjs": "^1.11.2",
     "playwright": "^1.63",
-    "tough-cookie": "^4.0.0",
+    "tough-cookie": "^5.1.2",
     "xml-js": "^1.6.11"
   },
   "devDependencies": {
@@ -23,7 +23,6 @@
     "@types/command-line-usage": "^5.0.2",
     "@types/node": "^26",
     "@types/qs": "^6.9.7",
-    "@types/tough-cookie": "^4.0.2",
     "nodemon": "^2.0.16",
     "prettier": "^3",
     "ts-node": "^10.7.0",

@@ -193,19 +193,25 @@ async function run({ manual, email, password, headed, cookieString }: CLIArgs) {
       return;
     }
 
-    transformedCookies = jar.toJSON().cookies.map((c) => ({
-      name: c.key,
-      value: c.value,
-      domain: TIS_HOST,
-      // for some reason, we have to do this-- otherwise, the iPlanetDirectoryPro
-      // cookie isn't sent, which means that the session isn't working
-      secure: true,
-      sameSite: "None",
-      path: c.path,
-      httpOnly: false,
-      // expires: c.expires ? dayjs(c.expires).unix() : dayjs().add(1, "day").unix()
-      expires: dayjs().add(1, "day").unix(),
-    }));
+    // tough-cookie >=5 returns `SerializedCookieJar | undefined` from toJSON(),
+    // and marks every field of a serialized cookie optional. Treat an
+    // unserializable jar as empty and drop entries with no name/value rather
+    // than handing "undefined" to the browser context.
+    transformedCookies = (jar.toJSON()?.cookies ?? [])
+      .filter((c) => typeof c.key === "string" && c.value !== undefined)
+      .map((c) => ({
+        name: c.key as string,
+        value: c.value as string,
+        domain: TIS_HOST,
+        // for some reason, we have to do this-- otherwise, the iPlanetDirectoryPro
+        // cookie isn't sent, which means that the session isn't working
+        secure: true,
+        sameSite: "None" as const,
+        path: typeof c.path === "string" ? c.path : "/",
+        httpOnly: false,
+        // expires: c.expires ? dayjs(c.expires).unix() : dayjs().add(1, "day").unix()
+        expires: dayjs().add(1, "day").unix(),
+      }));
   } else if (cookieString) {
     console.log("Using cookies from command line...");
 

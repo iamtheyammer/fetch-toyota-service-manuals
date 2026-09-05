@@ -1,6 +1,6 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import parseTitle from "../src/ewd/parseTitle";
+import parseTitle from "../src/ewd/parseTitle.ts";
 
 /**
  * The EWD title list maps figure names to the PDF/SVGZ files to download.

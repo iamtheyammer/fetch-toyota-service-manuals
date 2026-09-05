@@ -1,13 +1,17 @@
 import commandLineArgs from "command-line-args";
 import { join, resolve } from "path";
 import { mkdir } from "fs/promises";
-import { collectDocuments, FoundDoc, MANUAL_OBJ_TYPES } from "./lookupCodes";
-import { resolveCookieString } from "./lib/harCookie";
-import { setCookieStringOnJar } from "../src/api/cookies";
-import { downloadLegacyDocumentPdf } from "../src/legacyManual";
-import { isAlreadyDownloaded, MIN_VALID_PDF_BYTES } from "../src/api/files";
-import { sanitizeName } from "../src/manual/toc";
-import { SessionExpiredError } from "../src/api/session";
+import {
+  collectDocuments,
+  type FoundDoc,
+  MANUAL_OBJ_TYPES,
+} from "./lookupCodes.ts";
+import { resolveCookieString } from "./lib/harCookie.ts";
+import { setCookieStringOnJar } from "../src/api/cookies.ts";
+import { downloadLegacyDocumentPdf } from "../src/legacyManual/index.ts";
+import { isAlreadyDownloaded, MIN_VALID_PDF_BYTES } from "../src/api/files.ts";
+import { sanitizeName } from "../src/manual/toc.ts";
+import { SessionExpiredError } from "../src/api/session.ts";
 
 /**
  * Download every standalone document (TSB, recall/campaign bulletin, diagnostic
@@ -20,8 +24,8 @@ import { SessionExpiredError } from "../src/api/session";
  * fetch those with the main downloader (`yarn start -m <type>:<id>`).
  *
  * Usage:
- *   TIS_COOKIE='...' ts-node tools/downloadDocuments.ts --model Highlander --year 2002
- *   ts-node tools/downloadDocuments.ts --model Highlander --year 2002 --har ~/Downloads/techinfo.har
+ *   TIS_COOKIE='...' node tools/downloadDocuments.ts --model Highlander --year 2002
+ *   node tools/downloadDocuments.ts --model Highlander --year 2002 --har ~/Downloads/techinfo.har
  *
  * Files are written to `<out>/<objType>/<publicationNumber>.pdf` (default out:
  * ./manuals/_documents).
@@ -47,7 +51,7 @@ async function main() {
 
   if (!opts.model || !opts.year) {
     console.error(
-      "Usage: ts-node tools/downloadDocuments.ts --model <Model> --year <Year> " +
+      "Usage: node tools/downloadDocuments.ts --model <Model> --year <Year> " +
         "[--division TOYOTA] [--har <har-path>] [--out <dir>]",
     );
     process.exit(2);

@@ -1,30 +1,19 @@
-import processCLIArgs, { CLIArgs } from "./processCLIArgs";
-import login from "./api/login";
+import processCLIArgs, { type CLIArgs } from "./processCLIArgs.ts";
+import login from "./api/login.ts";
 import { join, resolve } from "path";
 import { mkdir, readFile, writeFile } from "fs/promises";
-import downloadEWD from "./ewd";
-import downloadGenericManual from "./genericManual";
-import downloadLegacyManual, { isLegacyPdfManual } from "./legacyManual";
-import { fetchAndSaveToc } from "./manual/toc";
-import { chromium, Cookie } from "playwright";
-import { jar, TIS_HOST, TIS_ORIGIN } from "./api/client";
-import { addCookiesToJar, parseCookieString } from "./api/cookies";
-import { SessionExpiredError } from "./api/session";
+import downloadEWD from "./ewd/index.ts";
+import downloadGenericManual from "./genericManual/index.ts";
+import downloadLegacyManual, {
+  isLegacyPdfManual,
+} from "./legacyManual/index.ts";
+import { fetchAndSaveToc } from "./manual/toc.ts";
+import { chromium, type Cookie } from "playwright";
+import { jar, TIS_HOST, TIS_ORIGIN } from "./api/client.ts";
+import { addCookiesToJar, parseCookieString } from "./api/cookies.ts";
+import { SessionExpiredError } from "./api/session.ts";
 import dayjs from "dayjs";
-
-export interface Manual {
-  // Path prefix / downloader selector. "em" -> modern EWD (ewdappu); all other
-  // types share the generic "<type>/<id>/toc.xml" format and route through the
-  // generic/legacy downloader: "rm" -> repair manual, "bm" -> body manual,
-  // "ewd" -> older wiring diagram, "atm" -> automatic transmission manual,
-  // "cr" -> collision/body repair manual, "ncf" -> new car features,
-  // "whr" -> wire harness repair manual. The last four are common on older
-  // vehicles, which split content across several standalone publications.
-  type: "em" | "rm" | "bm" | "ewd" | "atm" | "cr" | "ncf" | "whr";
-  id: string; // e.g. EM1234
-  year?: number; // e.g. 2019
-  raw: string; // e.g. EM1234@2019
-}
+import type { Manual } from "./manual/types.ts";
 
 /** All accepted explicit `-m <type>:<id>` type prefixes. */
 const MANUAL_TYPES = [
@@ -163,7 +152,7 @@ async function run({ manual, email, password, headed, cookieString }: CLIArgs) {
   console.log("Copying accessor into manuals...");
   try {
     const accessorHTML = await readFile(
-      join(__dirname, "..", "accessor/index.html"),
+      join(import.meta.dirname, "..", "accessor/index.html"),
       "utf-8",
     );
     await Promise.all(

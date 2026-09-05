@@ -1,6 +1,6 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { extractPdfHref } from "../src/legacyManual/index";
+import { extractPdfHref } from "../src/legacyManual/index.ts";
 
 /**
  * Legacy (pre-~2010) manuals serve each "page" as a thin xhtml wrapper that

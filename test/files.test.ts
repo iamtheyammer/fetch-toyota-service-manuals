@@ -7,7 +7,7 @@ import {
   isAlreadyDownloaded,
   MIN_VALID_PDF_BYTES,
   MIN_VALID_EWD_FILE_BYTES,
-} from "../src/api/files";
+} from "../src/api/files.ts";
 
 /**
  * Resume support: a re-run must skip completed files but re-fetch truncated

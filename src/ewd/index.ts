@@ -1,12 +1,12 @@
 import { join } from "path";
 import { mkdir, writeFile } from "fs/promises";
-import { client } from "../api/client";
-import { AxiosResponse } from "axios";
-import parseTitle from "./parseTitle";
-import saveStream from "../api/saveStream";
-import { Manual } from "..";
-import { looksLikeLoginPage, SessionExpiredError } from "../api/session";
-import { isAlreadyDownloaded, MIN_VALID_EWD_FILE_BYTES } from "../api/files";
+import { client } from "../api/client.ts";
+import type { AxiosResponse } from "axios";
+import parseTitle from "./parseTitle.ts";
+import saveStream from "../api/saveStream.ts";
+import type { Manual } from "../manual/types.ts";
+import { looksLikeLoginPage, SessionExpiredError } from "../api/session.ts";
+import { isAlreadyDownloaded, MIN_VALID_EWD_FILE_BYTES } from "../api/files.ts";
 
 export default async function downloadEWD(manualData: Manual, path: string) {
   // The content sections an EWD can expose. Not every vehicle has every part

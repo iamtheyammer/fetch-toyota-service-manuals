@@ -5,7 +5,7 @@ import {
   looksLikeLoginPage,
   looksLikeSessionLost,
   SessionExpiredError,
-} from "../src/api/session";
+} from "../src/api/session.ts";
 
 /**
  * Session-expiry detection is the guard that stops a lapsed cookie from being

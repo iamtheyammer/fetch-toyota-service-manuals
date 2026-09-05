@@ -1,11 +1,11 @@
 import { mkdir } from "fs/promises";
 import { join } from "path";
-import { client, TIS_ORIGIN } from "../api/client";
-import { ParsedToC } from "../genericManual/parseToC";
-import saveStream from "../api/saveStream";
-import { looksLikeSessionLost, SessionExpiredError } from "../api/session";
-import { isAlreadyDownloaded, MIN_VALID_PDF_BYTES } from "../api/files";
-import { sanitizeName } from "../manual/toc";
+import { client, TIS_ORIGIN } from "../api/client.ts";
+import type { ParsedToC } from "../genericManual/parseToC.ts";
+import saveStream from "../api/saveStream.ts";
+import { looksLikeSessionLost, SessionExpiredError } from "../api/session.ts";
+import { isAlreadyDownloaded, MIN_VALID_PDF_BYTES } from "../api/files.ts";
+import { sanitizeName } from "../manual/toc.ts";
 
 /**
  * Older TIS manuals (e.g. the 2002-era repair manuals and `EWD###U` wiring

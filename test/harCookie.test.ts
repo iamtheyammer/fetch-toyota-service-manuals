@@ -7,7 +7,7 @@ import {
   cookieStringFromHar,
   cookieStringFromPlaywright,
   emitCookie,
-} from "../tools/lib/harCookie";
+} from "../tools/lib/harCookie.ts";
 
 /**
  * Cookie handling is the whole authentication story now that TIS's scripted

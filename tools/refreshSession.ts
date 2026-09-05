@@ -1,9 +1,9 @@
 import * as fs from "fs";
 import * as readline from "readline";
 import commandLineArgs from "command-line-args";
-import { chromium, Page } from "playwright";
-import { TIS_ORIGIN } from "../src/api/client";
-import { cookieStringFromPlaywright, emitCookie } from "./lib/harCookie";
+import { chromium, type Page } from "playwright";
+import { TIS_ORIGIN } from "../src/api/client.ts";
+import { cookieStringFromPlaywright, emitCookie } from "./lib/harCookie.ts";
 
 /**
  * Mint a fresh TIS session by driving the real browser login, including Toyota's

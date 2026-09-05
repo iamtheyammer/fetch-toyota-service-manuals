@@ -1,7 +1,7 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { parseCookieString, setCookieStringOnJar } from "../src/api/cookies";
-import { jar, TIS_HOST, TIS_ORIGIN } from "../src/api/client";
+import { parseCookieString, setCookieStringOnJar } from "../src/api/cookies.ts";
+import { jar, TIS_HOST, TIS_ORIGIN } from "../src/api/client.ts";
 
 /**
  * The cookie jar is the authentication seam: the browser does the login, and

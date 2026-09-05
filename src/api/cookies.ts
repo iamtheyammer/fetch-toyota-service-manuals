@@ -1,6 +1,6 @@
-import { Cookie } from "playwright";
+import type { Cookie } from "playwright";
 import dayjs from "dayjs";
-import { jar, TIS_HOST, TIS_ORIGIN } from "./client";
+import { jar, TIS_HOST, TIS_ORIGIN } from "./client.ts";
 
 /**
  * Parse a raw "name=value; name2=value2" cookie header into Playwright cookie

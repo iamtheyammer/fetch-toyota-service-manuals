@@ -1,6 +1,6 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import parseToC from "../src/genericManual/parseToC";
+import parseToC from "../src/genericManual/parseToC.ts";
 
 /**
  * Regression tests for the three ToC data-loss bugs fixed in PR #26, plus the

@@ -1,8 +1,8 @@
 import commandLineArgs from "command-line-args";
-import { chromium, Page } from "playwright";
-import { resolveCookieString } from "./lib/harCookie";
-import { parseCookieString } from "../src/api/cookies";
-import { TIS_ORIGIN } from "../src/api/client";
+import { chromium, type Page } from "playwright";
+import { resolveCookieString } from "./lib/harCookie.ts";
+import { parseCookieString } from "../src/api/cookies.ts";
+import { TIS_ORIGIN } from "../src/api/client.ts";
 
 /**
  * Look up the publication codes (Repair Manual, EWD, Body Manual, …) for a
@@ -11,8 +11,8 @@ import { TIS_ORIGIN } from "../src/api/client";
  * `publicationNumber`/`objType` off the result links.
  *
  * Usage:
- *   TIS_COOKIE='...' ts-node tools/lookupCodes.ts --model RAV4 --year 2020
- *   ts-node tools/lookupCodes.ts --model "RAV4 HV" --year 2020 --har ~/Downloads/techinfo.har
+ *   TIS_COOKIE='...' node tools/lookupCodes.ts --model RAV4 --year 2020
+ *   node tools/lookupCodes.ts --model "RAV4 HV" --year 2020 --har ~/Downloads/techinfo.har
  *
  * Output lists each code with the exact `-m` flag to pass to the downloader.
  */
@@ -254,7 +254,7 @@ async function main() {
 
   if (!opts.model || !opts.year) {
     console.error(
-      "Usage: ts-node tools/lookupCodes.ts --model <Model> --year <Year> [--division TOYOTA] [--har <har-path>]",
+      "Usage: node tools/lookupCodes.ts --model <Model> --year <Year> [--division TOYOTA] [--har <har-path>]",
     );
     process.exit(2);
   }
@@ -318,9 +318,11 @@ async function main() {
   }
 }
 
-// Only run the CLI when invoked directly (e.g. `ts-node tools/lookupCodes.ts`),
+// Only run the CLI when invoked directly (e.g. `node tools/lookupCodes.ts`),
 // not when imported for `collectDocuments` (e.g. by tools/downloadDocuments.ts).
-if (require.main === module) {
+// import.meta.main is the ES-module form of the old `require.main === module`
+// (Node >= 24); without it, importing this module ran the CLI.
+if (import.meta.main) {
   main().catch((e) => {
     console.error("ERROR:", e.message);
     process.exit(1);

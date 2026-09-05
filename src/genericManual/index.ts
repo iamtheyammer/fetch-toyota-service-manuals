@@ -1,11 +1,11 @@
 import { mkdir } from "fs/promises";
 import { join } from "path";
-import { Page } from "playwright";
-import { TIS_ORIGIN } from "../api/client";
-import { ParsedToC } from "./parseToC";
-import { isLoginRedirectUrl, SessionExpiredError } from "../api/session";
-import { isAlreadyDownloaded, MIN_VALID_PDF_BYTES } from "../api/files";
-import { sanitizeName } from "../manual/toc";
+import type { Page } from "playwright";
+import { TIS_ORIGIN } from "../api/client.ts";
+import type { ParsedToC } from "./parseToC.ts";
+import { isLoginRedirectUrl, SessionExpiredError } from "../api/session.ts";
+import { isAlreadyDownloaded, MIN_VALID_PDF_BYTES } from "../api/files.ts";
+import { sanitizeName } from "../manual/toc.ts";
 
 /**
  * Download a modern manual whose pages are HTML documents, rendering each to a

@@ -1,10 +1,10 @@
-import { AxiosResponse } from "axios";
+import type { AxiosResponse } from "axios";
 import { writeFile } from "fs/promises";
 import { join } from "path";
-import { client } from "../api/client";
-import parseToC, { ParsedToC } from "../genericManual/parseToC";
-import { looksLikeLoginPage, SessionExpiredError } from "../api/session";
-import { Manual } from "..";
+import { client } from "../api/client.ts";
+import parseToC, { type ParsedToC } from "../genericManual/parseToC.ts";
+import { looksLikeLoginPage, SessionExpiredError } from "../api/session.ts";
+import type { Manual } from "./types.ts";
 
 /**
  * Shared table-of-contents handling for both the modern (HTML) and legacy (PDF)

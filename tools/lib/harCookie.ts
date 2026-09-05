@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from "fs";
-import { TIS_HOST } from "../../src/api/client";
+import { TIS_HOST } from "../../src/api/client.ts";
 
 /**
  * Helpers for reusing a logged-in TIS browser session captured as a HAR file.

@@ -1,4 +1,4 @@
-import { client, TIS_ORIGIN } from "./client";
+import { client, TIS_ORIGIN } from "./client.ts";
 
 /**
  * login logs in with the user's email and password.

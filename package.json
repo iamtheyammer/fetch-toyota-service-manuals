@@ -28,7 +28,7 @@
     "@types/node": "^26",
     "@types/qs": "^6.15.1",
     "prettier": "^3",
-    "typescript": "^5.9"
+    "typescript": "^7"
   },
   "scripts": {
     "start": "NODE_TLS_REJECT_UNAUTHORIZED=0 node src/index.ts",

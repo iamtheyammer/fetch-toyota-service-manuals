@@ -26,7 +26,6 @@
     "@types/command-line-args": "^5.2.3",
     "@types/command-line-usage": "^5.0.4",
     "@types/node": "^26",
-    "@types/qs": "^6.15.1",
     "prettier": "^3",
     "typescript": "^7"
   },

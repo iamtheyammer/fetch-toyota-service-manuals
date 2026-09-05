@@ -17,7 +17,7 @@ interface ItemElement {
 
 export default function parseToC(
   tocXml: string,
-  modelYear?: number
+  modelYear?: number,
 ): ParsedToC {
   const xmlobj = xml2js(tocXml, {
     compact: true,
@@ -92,7 +92,7 @@ interface ItemPath {
 function getItemPath(
   item: ItemElement,
   currentPath: string[] = [],
-  year?: number
+  year?: number,
 ): ItemPath[] {
   let subitem = item.item; // needed if year specified
 
@@ -104,7 +104,7 @@ function getItemPath(
       if (!tocdataIsApplicable(item.tocdata, year)) {
         // return
         console.log(
-          `Skipping page ${item.name._text} (solo) and its children because it's not applicable to year ${year}.`
+          `Skipping page ${item.name._text} (solo) and its children because it's not applicable to year ${year}.`,
         );
         return [];
       }
@@ -118,7 +118,7 @@ function getItemPath(
       if (!tocdataIsApplicable(itemtocdata, year)) {
         // if it's not applicable, stop
         console.log(
-          `Skipping page ${item.name._text} (array) and its children because it's not applicable to year ${year}.`
+          `Skipping page ${item.name._text} (array) and its children because it's not applicable to year ${year}.`,
         );
         return [];
       }
@@ -128,7 +128,7 @@ function getItemPath(
       if (subitemtocdatas.length === 1) {
         if (!tocdataIsApplicable(subitemtocdatas[0], year)) {
           console.log(
-            `Skipping page ${item.name._text} (sub-single) and its children because it's not applicable to year ${year}.`
+            `Skipping page ${item.name._text} (sub-single) and its children because it's not applicable to year ${year}.`,
           );
           return [];
         }
@@ -136,7 +136,7 @@ function getItemPath(
         // if there are multiple subitems, we need to check which ones are applicable
         // item.item[0] should coorespond to subitemtocdatas[0], etc.
         subitem = (item.item as ItemElement[]).filter((itm, idx) =>
-          tocdataIsApplicable(subitemtocdatas[idx], year)
+          tocdataIsApplicable(subitemtocdatas[idx], year),
         );
 
         const skippedItemCount = subitemtocdatas.length - subitem.length;
@@ -144,12 +144,12 @@ function getItemPath(
         // if there are no applicable subitems, stop
         if (subitem.length === 0) {
           console.log(
-            `Skipping page ${item.name._text} (sub-array) and its children because it's not applicable to year ${year}.`
+            `Skipping page ${item.name._text} (sub-array) and its children because it's not applicable to year ${year}.`,
           );
           return [];
         } else if (skippedItemCount > 0) {
           console.log(
-            `Skipping ${skippedItemCount} pages below ${item.name._text} because they're not applicable to year ${year}.`
+            `Skipping ${skippedItemCount} pages below ${item.name._text} because they're not applicable to year ${year}.`,
           );
         }
       }
@@ -172,7 +172,7 @@ function getItemPath(
     const items: ItemPath[] = [];
     for (const subItemElement of subitem) {
       items.push(
-        ...getItemPath(subItemElement, [...currentPath, item.name._text], year)
+        ...getItemPath(subItemElement, [...currentPath, item.name._text], year),
       );
     }
     return items;
@@ -184,7 +184,7 @@ function getItemPath(
 
 function recursivelyAccessObject(
   keys: string[],
-  obj: { [any: string]: any }
+  obj: { [any: string]: any },
 ): { [any: string]: string } {
   const existing = obj[keys[0]];
   if (typeof existing === "string") {

@@ -48,7 +48,7 @@ async function main() {
   if (!opts.model || !opts.year) {
     console.error(
       "Usage: ts-node tools/downloadDocuments.ts --model <Model> --year <Year> " +
-        "[--division TOYOTA] [--har <har-path>] [--out <dir>]"
+        "[--division TOYOTA] [--har <har-path>] [--out <dir>]",
     );
     process.exit(2);
   }
@@ -57,18 +57,18 @@ async function main() {
   setCookieStringOnJar(cookieString);
 
   console.log(
-    `Looking up documents for ${opts.division} ${opts.model} ${opts.year}...`
+    `Looking up documents for ${opts.division} ${opts.model} ${opts.year}...`,
   );
   const allDocs = await collectDocuments(
     { division: opts.division, model: opts.model, year: opts.year },
-    cookieString
+    cookieString,
   );
 
   const docs = allDocs.filter((d) => !MANUAL_OBJ_TYPES.has(d.type));
   const skippedManuals = allDocs.length - docs.length;
   console.log(
     `Found ${allDocs.length} documents; ${docs.length} standalone ` +
-      `(skipping ${skippedManuals} multi-page manual publications -- use the main downloader for those).`
+      `(skipping ${skippedManuals} multi-page manual publications -- use the main downloader for those).`,
   );
 
   let saved = 0;
@@ -94,7 +94,7 @@ async function main() {
       } else {
         noPdf++;
         console.error(
-          `  No PDF link for ${doc.type}/${doc.publicationNumber}.`
+          `  No PDF link for ${doc.type}/${doc.publicationNumber}.`,
         );
       }
     } catch (e) {
@@ -106,7 +106,7 @@ async function main() {
 
   console.log(
     `\nDone. saved=${saved} skipped(existing)=${skipped} no-pdf=${noPdf} failed=${failed} ` +
-      `(of ${docs.length} standalone documents).`
+      `(of ${docs.length} standalone documents).`,
   );
   if (failed > 0) process.exit(1);
 }

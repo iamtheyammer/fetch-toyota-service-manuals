@@ -65,11 +65,11 @@ async function clickByText(page: Page, re: string): Promise<string | null> {
       const rx = new RegExp(reSrc, "i");
       const els = Array.from(
         document.querySelectorAll(
-          "button, input[type=submit], input[type=button], input[type=image], a"
-        )
+          "button, input[type=submit], input[type=button], input[type=image], a",
+        ),
       );
       const hit = els.find((e: any) =>
-        rx.test((e.value || e.textContent || e.alt || e.title || "").trim())
+        rx.test((e.value || e.textContent || e.alt || e.title || "").trim()),
       );
       if (hit) {
         (hit as HTMLElement).click();
@@ -107,7 +107,7 @@ async function readOtp(otpFile?: string): Promise<string> {
     rl.question("Enter the OTP code sent to your device: ", (answer) => {
       rl.close();
       resolve(answer.trim());
-    })
+    }),
   );
 }
 
@@ -147,7 +147,7 @@ async function main() {
       .evaluate((reSrc) => {
         const rx = new RegExp(reSrc, "i");
         for (const r of Array.from(
-          document.querySelectorAll("input[type=radio]")
+          document.querySelectorAll("input[type=radio]"),
         )) {
           const label =
             (r.closest("label") && r.closest("label")!.textContent) ||
@@ -173,14 +173,14 @@ async function main() {
       const otp = await readOtp(opts["otp-file"]);
       const otpField = page
         .locator(
-          "input[type=text]:visible, input[type=number]:visible, input[type=tel]:visible, input[type=password]:visible"
+          "input[type=text]:visible, input[type=number]:visible, input[type=tel]:visible, input[type=password]:visible",
         )
         .first();
       await otpField.fill(otp);
       await page.waitForTimeout(OTP_FILL_SETTLE_MS);
       const verified = await clickByText(
         page,
-        "verify|log ?in|submit|continue|confirm|next"
+        "verify|log ?in|submit|continue|confirm|next",
       );
       if (!verified) await otpField.press("Enter").catch(() => {});
 
@@ -204,7 +204,7 @@ async function main() {
       !atPortal(page.url())
     ) {
       throw new Error(
-        `Login did not complete (url=${page.url()}). The code may have been wrong or expired.`
+        `Login did not complete (url=${page.url()}). The code may have been wrong or expired.`,
       );
     }
 

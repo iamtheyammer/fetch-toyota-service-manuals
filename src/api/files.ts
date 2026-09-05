@@ -19,7 +19,7 @@ export const MIN_VALID_EWD_FILE_BYTES = 512;
  */
 export function isAlreadyDownloaded(
   filePath: string,
-  minBytes: number
+  minBytes: number,
 ): boolean {
   return existsSync(filePath) && statSync(filePath).size > minBytes;
 }

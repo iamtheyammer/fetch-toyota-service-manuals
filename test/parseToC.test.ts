@@ -18,7 +18,7 @@ describe("parseToC", () => {
       toc(`<item href="/a/"><name>Section A</name>
              <item href="/a/1.html"><name>Page One</name></item>
              <item href="/a/2.html"><name>Page Two</name></item>
-           </item>`)
+           </item>`),
     );
     assert.deepEqual(parsed, {
       "Section A": { "Page One": "/a/1.html", "Page Two": "/a/2.html" },
@@ -32,7 +32,7 @@ describe("parseToC", () => {
     const parsed = parseToC(
       toc(`<item href="/w/"><name>Wire Harness</name>
              <item href="/w/1.html"><name>Connector List</name></item>
-           </item>`)
+           </item>`),
     );
     assert.deepEqual(parsed, {
       "Wire Harness": { "Connector List": "/w/1.html" },
@@ -47,7 +47,7 @@ describe("parseToC", () => {
       toc(`<item href="/f/"><name>Folder</name>
              <item href="/f/1.html"><name>EGR Flow (P0402)</name></item>
              <item href="/f/2.html"><name>EGR Flow (P0402)</name></item>
-           </item>`)
+           </item>`),
     );
     assert.deepEqual(parsed, {
       Folder: {
@@ -66,7 +66,7 @@ describe("parseToC", () => {
              <item href="/r/brake/"><name>Brake</name>
                <item href="/r/brake/1.html"><name>Inner</name></item>
              </item>
-           </item>`)
+           </item>`),
     );
     assert.deepEqual(parsed, {
       Root: {

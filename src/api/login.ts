@@ -8,7 +8,7 @@ import { client, TIS_ORIGIN } from "./client";
  */
 export default async function login(
   email: string,
-  password: string
+  password: string,
 ): Promise<void> {
   await client({
     method: "POST",

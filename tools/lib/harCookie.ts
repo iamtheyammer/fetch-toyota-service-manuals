@@ -30,7 +30,7 @@ export function cookieStringFromHar(harPath: string): {
     }
     if (host !== TIS_HOST) continue;
     const header = (entry.request.headers ?? []).find(
-      (h: any) => h.name.toLowerCase() === "cookie"
+      (h: any) => h.name.toLowerCase() === "cookie",
     );
     if (header?.value) {
       for (const pair of String(header.value).split(/;\s*/)) {
@@ -43,7 +43,7 @@ export function cookieStringFromHar(harPath: string): {
   const names = Object.keys(jar);
   if (!names.includes("TISESSIONID")) {
     throw new Error(
-      `No TISESSIONID cookie found in ${harPath} -- is it a logged-in TIS session capture?`
+      `No TISESSIONID cookie found in ${harPath} -- is it a logged-in TIS session capture?`,
     );
   }
   return {
@@ -60,13 +60,13 @@ export function resolveCookieString(harPath?: string): string {
   if (harPath) return cookieStringFromHar(harPath).cookieString;
   if (process.env.TIS_COOKIE) return process.env.TIS_COOKIE;
   throw new Error(
-    "No TIS cookie: pass --har <path> to a logged-in HAR, or set TIS_COOKIE."
+    "No TIS cookie: pass --har <path> to a logged-in HAR, or set TIS_COOKIE.",
   );
 }
 
 /** Assemble a `name=value; ...` cookie string from Playwright cookie records. */
 export function cookieStringFromPlaywright(
-  cookies: { name: string; value: string }[]
+  cookies: { name: string; value: string }[],
 ): string {
   return cookies.map((c) => `${c.name}=${c.value}`).join("; ");
 }
@@ -95,7 +95,7 @@ export function emitCookie(cookieString: string, outPath?: string): void {
     if (e.code === "EEXIST") {
       throw new Error(
         `Refusing to write the session cookie to existing file ${outPath} -- ` +
-          `remove it first (its permissions/owner cannot be trusted).`
+          `remove it first (its permissions/owner cannot be trusted).`,
       );
     }
     throw e;

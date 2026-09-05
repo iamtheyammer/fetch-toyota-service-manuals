@@ -99,7 +99,7 @@ async function run({ manual, email, password, headed, cookieString }: CLIArgs) {
         process.exit(1);
       } else {
         console.log(
-          `Detected a manual with a year: ${raw} (${year}). We'll try to download only manual pages that pertain to that year, but can't guarantee that it'll work.`
+          `Detected a manual with a year: ${raw} (${year}). We'll try to download only manual pages that pertain to that year, but can't guarantee that it'll work.`,
         );
       }
     }
@@ -133,7 +133,7 @@ async function run({ manual, email, password, headed, cookieString }: CLIArgs) {
         console.error(
           `Invalid manual ${m}: prefix the ID with a type ` +
             `(rm:/bm:/em:/ewd:/atm:/cr:/ncf:/whr:) ` +
-            `or use an ID starting with EM, RM, or BM.`
+            `or use an ID starting with EM, RM, or BM.`,
         );
         process.exit(1);
       }
@@ -145,12 +145,12 @@ async function run({ manual, email, password, headed, cookieString }: CLIArgs) {
     [...ewds, ...genericManuals].map((m) => [
       m.id,
       resolve(join(".", "manuals", m.raw)),
-    ])
+    ]),
   );
 
   try {
     await Promise.all(
-      Object.values(dirPaths).map((m) => mkdir(m, { recursive: true }))
+      Object.values(dirPaths).map((m) => mkdir(m, { recursive: true })),
     );
   } catch (e: any) {
     if (e.code !== "EEXIST") {
@@ -164,12 +164,12 @@ async function run({ manual, email, password, headed, cookieString }: CLIArgs) {
   try {
     const accessorHTML = await readFile(
       join(__dirname, "..", "accessor/index.html"),
-      "utf-8"
+      "utf-8",
     );
     await Promise.all(
       Object.values(dirPaths).map((m) =>
-        writeFile(join(m, "index.html"), accessorHTML)
-      )
+        writeFile(join(m, "index.html"), accessorHTML),
+      ),
     );
   } catch (e) {
     console.error("Unable to copy accessor file into manuals.", e);
@@ -215,7 +215,7 @@ async function run({ manual, email, password, headed, cookieString }: CLIArgs) {
     addCookiesToJar(transformedCookies);
   } else {
     console.log(
-      "No credentials provided. Please provide either a cookie string or email/password."
+      "No credentials provided. Please provide either a cookie string or email/password.",
     );
     process.exit(1);
   }
@@ -237,7 +237,7 @@ async function run({ manual, email, password, headed, cookieString }: CLIArgs) {
     throw new Error(
       `Doesn't appear we're logged into TIS, we're at ${
         resp ? resp.url() : "unknown URL"
-      }`
+      }`,
     );
   }
 

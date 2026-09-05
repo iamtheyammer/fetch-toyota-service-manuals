@@ -28,30 +28,42 @@ describe("isAlreadyDownloaded", () => {
   test("false for a file that does not exist", () => {
     assert.equal(
       isAlreadyDownloaded(join(dir, "missing.pdf"), MIN_VALID_PDF_BYTES),
-      false
+      false,
     );
   });
 
   test("true for a complete PDF", () => {
     assert.equal(
-      isAlreadyDownloaded(file("full.pdf", MIN_VALID_PDF_BYTES + 1), MIN_VALID_PDF_BYTES),
-      true
+      isAlreadyDownloaded(
+        file("full.pdf", MIN_VALID_PDF_BYTES + 1),
+        MIN_VALID_PDF_BYTES,
+      ),
+      true,
     );
   });
 
   test("false for a login-page stub masquerading as a PDF", () => {
     // Saved TIS login pages are a few hundred bytes -- these must be re-fetched.
-    assert.equal(isAlreadyDownloaded(file("stub.pdf", 400), MIN_VALID_PDF_BYTES), false);
+    assert.equal(
+      isAlreadyDownloaded(file("stub.pdf", 400), MIN_VALID_PDF_BYTES),
+      false,
+    );
   });
 
   test("false for an empty file from an interrupted write", () => {
-    assert.equal(isAlreadyDownloaded(file("empty.pdf", 0), MIN_VALID_PDF_BYTES), false);
+    assert.equal(
+      isAlreadyDownloaded(file("empty.pdf", 0), MIN_VALID_PDF_BYTES),
+      false,
+    );
   });
 
   test("false at exactly the threshold (strictly greater is required)", () => {
     assert.equal(
-      isAlreadyDownloaded(file("exact.pdf", MIN_VALID_PDF_BYTES), MIN_VALID_PDF_BYTES),
-      false
+      isAlreadyDownloaded(
+        file("exact.pdf", MIN_VALID_PDF_BYTES),
+        MIN_VALID_PDF_BYTES,
+      ),
+      false,
     );
   });
 

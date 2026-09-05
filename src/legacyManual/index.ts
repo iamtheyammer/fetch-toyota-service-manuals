@@ -51,7 +51,7 @@ export async function isLegacyPdfManual(toc: ParsedToC): Promise<boolean> {
  */
 export default async function downloadLegacyManual(
   toc: ParsedToC,
-  path: string
+  path: string,
 ) {
   console.log("Downloading full manual (legacy PDF format)...");
   await recursivelyDownloadLegacyManual(path, toc);
@@ -70,7 +70,7 @@ export default async function downloadLegacyManual(
  */
 export async function downloadLegacyDocumentPdf(
   wrapperHref: string,
-  pdfPath: string
+  pdfPath: string,
 ): Promise<boolean> {
   // 1. Fetch the xhtml wrapper to discover the PDF it points to. The wrapper is
   //    legitimately HTML, so detect session loss with the precise check rather

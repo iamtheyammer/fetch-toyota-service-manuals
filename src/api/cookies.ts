@@ -34,7 +34,7 @@ export function addCookiesToJar(cookies: Cookie[]): void {
   for (const c of cookies) {
     jar.setCookieSync(
       `${c.name}=${c.value}; Domain=${c.domain}; Path=${c.path}; Expires=${c.expires}; Secure; SameSite=None`,
-      `${TIS_ORIGIN}/t3Portal/`
+      `${TIS_ORIGIN}/t3Portal/`,
     );
   }
 }

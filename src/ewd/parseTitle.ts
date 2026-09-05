@@ -34,7 +34,7 @@ interface TitleElement {
 }
 
 export default async function parseTitle(
-  titleXml: string
+  titleXml: string,
 ): Promise<ParsedTitle> {
   const xmlobj = xml2js(titleXml, {
     compact: true,
@@ -55,8 +55,8 @@ export default async function parseTitle(
   const data: TitleElement[] = Array.isArray(rawEntries)
     ? rawEntries
     : rawEntries
-    ? [rawEntries]
-    : [];
+      ? [rawEntries]
+      : [];
 
   const parsedTitle: ParsedTitle = {};
 
@@ -64,7 +64,7 @@ export default async function parseTitle(
     const fileType = d.fig._attributes.type;
     if (fileType !== "pdf" && fileType !== "svgz") {
       console.log(
-        `Skipping EWD Page ${d.name._text} because its type is not pdf or svgz, it is ${d.fig._attributes.type}`
+        `Skipping EWD Page ${d.name._text} because its type is not pdf or svgz, it is ${d.fig._attributes.type}`,
       );
       return;
     }

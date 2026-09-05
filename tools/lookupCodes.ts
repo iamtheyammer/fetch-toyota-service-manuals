@@ -166,7 +166,7 @@ function downloaderFlag(type: string, pub: string, year: string): string {
  */
 export async function collectDocuments(
   selector: VehicleSelector,
-  cookieString: string
+  cookieString: string,
 ): Promise<FoundDoc[]> {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({
@@ -187,7 +187,7 @@ export async function collectDocuments(
     if (/concurrentLoginFailure|custom-login|\/login/i.test(page.url())) {
       throw new Error(
         "TIS session is not valid (expired, or bumped by a concurrent login). " +
-          "Capture a fresh HAR while logged in, with no other TIS sessions open."
+          "Capture a fresh HAR while logged in, with no other TIS sessions open.",
       );
     }
 
@@ -222,7 +222,7 @@ export async function collectDocuments(
       .$$eval("a[href]", (as) =>
         (as as HTMLAnchorElement[])
           .map((a) => a.href)
-          .filter((h) => /_pageLabel=lib_[a-z]+_page/.test(h))
+          .filter((h) => /_pageLabel=lib_[a-z]+_page/.test(h)),
       )
       .catch(() => []);
     const tabByLabel = new Map<string, string>();
@@ -254,7 +254,7 @@ async function main() {
 
   if (!opts.model || !opts.year) {
     console.error(
-      "Usage: ts-node tools/lookupCodes.ts --model <Model> --year <Year> [--division TOYOTA] [--har <har-path>]"
+      "Usage: ts-node tools/lookupCodes.ts --model <Model> --year <Year> [--division TOYOTA] [--har <har-path>]",
     );
     process.exit(2);
   }
@@ -262,7 +262,7 @@ async function main() {
   const cookieString = resolveCookieString(opts.har);
   const docs = await collectDocuments(
     { division: opts.division, model: opts.model, year: opts.year },
-    cookieString
+    cookieString,
   );
 
   // Group by objType for a readable, stable listing.
@@ -290,12 +290,12 @@ async function main() {
         const flag = downloaderFlag(type, pub, opts.year);
         manualFlags.push(flag.replace(/^-m /, ""));
         console.log(
-          `  ${typeLabel(type).padEnd(28)} ${pub.padEnd(14)} ${flag}`
+          `  ${typeLabel(type).padEnd(28)} ${pub.padEnd(14)} ${flag}`,
         );
       } else {
         bulletinCount++;
         console.log(
-          `  ${typeLabel(type).padEnd(28)} ${pub.padEnd(14)} (bulletin)`
+          `  ${typeLabel(type).padEnd(28)} ${pub.padEnd(14)} (bulletin)`,
         );
       }
     }
@@ -305,7 +305,7 @@ async function main() {
     console.log(
       `\nDownload the manuals:\n  yarn start ${manualFlags
         .map((f) => `-m ${f}`)
-        .join(" ")}`
+        .join(" ")}`,
     );
   }
   if (bulletinCount) {
@@ -313,7 +313,7 @@ async function main() {
       `\nDownload the ${bulletinCount} standalone document(s) (TSBs, recalls, ` +
         `bulletins):\n  yarn download-documents --model "${opts.model}" ` +
         `--year ${opts.year}` +
-        (opts.division !== "TOYOTA" ? ` --division "${opts.division}"` : "")
+        (opts.division !== "TOYOTA" ? ` --division "${opts.division}"` : ""),
     );
   }
 }

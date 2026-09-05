@@ -15,7 +15,7 @@ import { sanitizeName } from "../manual/toc";
 export default async function downloadGenericManual(
   page: Page,
   toc: ParsedToC,
-  path: string
+  path: string,
 ) {
   console.log("Downloading full manual...");
   await recursivelyDownloadManual(page, path, toc);
@@ -24,7 +24,7 @@ export default async function downloadGenericManual(
 async function recursivelyDownloadManual(
   page: Page,
   path: string,
-  toc: ParsedToC
+  toc: ParsedToC,
 ) {
   for (const [name, value] of Object.entries(toc)) {
     if (typeof value === "string") {

@@ -29,7 +29,7 @@ export function sanitizeName(name: string): string {
  */
 export async function fetchAndSaveToc(
   manualData: Manual,
-  path: string
+  path: string,
 ): Promise<ParsedToC> {
   let tocReq: AxiosResponse;
   try {
@@ -43,11 +43,11 @@ export async function fetchAndSaveToc(
   } catch (e: any) {
     if (e.response && e.response.status === 404) {
       throw new Error(
-        `Manual ${manualData.id} doesn't appear to exist-- are you sure the ID is right?`
+        `Manual ${manualData.id} doesn't appear to exist-- are you sure the ID is right?`,
       );
     }
     throw new Error(
-      `Unknown error getting table of contents for ${manualData.raw}: ${e}`
+      `Unknown error getting table of contents for ${manualData.raw}: ${e}`,
     );
   }
 
@@ -63,14 +63,14 @@ export async function fetchAndSaveToc(
     writeFile(join(path, "toc-full.xml"), tocReq.data),
     writeFile(
       join(path, "toc-downloaded.json"),
-      JSON.stringify(files, null, 2)
+      JSON.stringify(files, null, 2),
     ),
     writeFile(
       join(path, "toc.js"),
       `document.toc = JSON.parse(\`${JSON.stringify(files).replaceAll(
         '\\"',
-        ""
-      )}\`);`
+        "",
+      )}\`);`,
     ),
   ]);
 

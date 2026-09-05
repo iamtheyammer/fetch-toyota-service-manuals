@@ -44,7 +44,7 @@ export default async function downloadEWD(manualData: Manual, path: string) {
       }
 
       throw new Error(
-        `Unknown error getting title XML for EWD ${manualData.id} part ${part}: ${e}`
+        `Unknown error getting title XML for EWD ${manualData.id} part ${part}: ${e}`,
       );
     }
 
@@ -71,7 +71,7 @@ export default async function downloadEWD(manualData: Manual, path: string) {
     await writeFile(join(partPath, "title.xml"), titleReq.data);
     await writeFile(
       join(partPath, "title.json"),
-      JSON.stringify(files, null, 2)
+      JSON.stringify(files, null, 2),
     );
 
     for (const fileName in files) {
@@ -88,7 +88,7 @@ export default async function downloadEWD(manualData: Manual, path: string) {
       }
 
       console.log(
-        `Downloading ${manualData.id} ${part} ${fileName} as ${fileExt}...`
+        `Downloading ${manualData.id} ${part} ${fileName} as ${fileExt}...`,
       );
 
       const fileReq = await client({
@@ -116,7 +116,7 @@ export default async function downloadEWD(manualData: Manual, path: string) {
   // has at least "system").
   if (!foundAnyPart) {
     throw new Error(
-      `EWD ${manualData.id} doesn't appear to exist-- are you sure the ID is right?`
+      `EWD ${manualData.id} doesn't appear to exist-- are you sure the ID is right?`,
     );
   }
 }

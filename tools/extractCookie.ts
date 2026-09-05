@@ -17,7 +17,7 @@ function main(): void {
   const [harPath, outPath] = process.argv.slice(2);
   if (!harPath) {
     console.error(
-      "Usage: ts-node tools/extractCookie.ts <har-path> [out-env-file]"
+      "Usage: ts-node tools/extractCookie.ts <har-path> [out-env-file]",
     );
     process.exit(2);
   }

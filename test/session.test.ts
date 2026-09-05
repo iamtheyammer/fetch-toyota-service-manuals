@@ -32,9 +32,9 @@ describe("isLoginRedirectUrl", () => {
   test("does not flag a real manual page URL", () => {
     assert.equal(
       isLoginRedirectUrl(
-        "https://techinfo.toyota.com/t3Portal/external/en/rm/RM36Q0U/xhtml/RM000000XYZ.html"
+        "https://techinfo.toyota.com/t3Portal/external/en/rm/RM36Q0U/xhtml/RM000000XYZ.html",
       ),
-      false
+      false,
     );
   });
 });
@@ -49,8 +49,10 @@ describe("looksLikeLoginPage", () => {
 
   test("accepts real XML content", () => {
     assert.equal(
-      looksLikeLoginPage('<?xml version="1.0"?><xmltoc><name>RM</name></xmltoc>'),
-      false
+      looksLikeLoginPage(
+        '<?xml version="1.0"?><xmltoc><name>RM</name></xmltoc>',
+      ),
+      false,
     );
   });
 
@@ -67,15 +69,24 @@ describe("looksLikeSessionLost", () => {
   test("flags the concurrent-login guard", () => {
     assert.equal(
       looksLikeSessionLost("<html><head><title>concurrentLoginFailure</title>"),
-      true
+      true,
     );
   });
 
   test("flags SSO bounce markers", () => {
-    assert.equal(looksLikeSessionLost("<html>...custom-login-response..."), true);
-    assert.equal(looksLikeSessionLost("<html>...<a href='/openam/XUI/'>"), true);
+    assert.equal(
+      looksLikeSessionLost("<html>...custom-login-response..."),
+      true,
+    );
+    assert.equal(
+      looksLikeSessionLost("<html>...<a href='/openam/XUI/'>"),
+      true,
+    );
     assert.equal(looksLikeSessionLost("<html>x-openam-password"), true);
-    assert.equal(looksLikeSessionLost("<form action='/j_security_check'>"), true);
+    assert.equal(
+      looksLikeSessionLost("<form action='/j_security_check'>"),
+      true,
+    );
   });
 
   test("does NOT flag a valid legacy xhtml page wrapper", () => {

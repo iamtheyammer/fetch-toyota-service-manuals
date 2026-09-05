@@ -76,7 +76,7 @@ export class SessionExpiredError extends Error {
   constructor() {
     super(
       "TIS session appears to have expired (redirected to the login page). " +
-        "Grab a fresh cookie and re-run -- already-downloaded files are skipped."
+        "Grab a fresh cookie and re-run -- already-downloaded files are skipped.",
     );
     this.name = "SessionExpiredError";
   }

@@ -14,43 +14,51 @@ describe("extractPdfHref", () => {
 
   test("reads <link rel=pdf href=...>", () => {
     assert.equal(
-      extractPdfHref(`<html><head><link rel="pdf" href="${href}"/></head></html>`),
-      href
+      extractPdfHref(
+        `<html><head><link rel="pdf" href="${href}"/></head></html>`,
+      ),
+      href,
     );
   });
 
   test("reads <link href=... rel=pdf> (attributes reversed)", () => {
     assert.equal(
-      extractPdfHref(`<html><head><link href="${href}" rel="pdf"/></head></html>`),
-      href
+      extractPdfHref(
+        `<html><head><link href="${href}" rel="pdf"/></head></html>`,
+      ),
+      href,
     );
   });
 
   test("reads a location = '....pdf' script redirect", () => {
     assert.equal(
       extractPdfHref(`<html><script>location = "${href}";</script></html>`),
-      href
+      href,
     );
   });
 
   test("is case-insensitive and accepts single quotes", () => {
     assert.equal(
       extractPdfHref(`<HTML><LINK REL='PDF' HREF='${href}'></HTML>`),
-      href
+      href,
     );
   });
 
   test("returns undefined for a modern HTML page (no PDF link)", () => {
     assert.equal(
-      extractPdfHref("<html><body><h1>Some rendered manual page</h1></body></html>"),
-      undefined
+      extractPdfHref(
+        "<html><body><h1>Some rendered manual page</h1></body></html>",
+      ),
+      undefined,
     );
   });
 
   test("ignores a non-pdf location redirect", () => {
     assert.equal(
-      extractPdfHref(`<html><script>location = "/t3Portal/index.jsp";</script></html>`),
-      undefined
+      extractPdfHref(
+        `<html><script>location = "/t3Portal/index.jsp";</script></html>`,
+      ),
+      undefined,
     );
   });
 });

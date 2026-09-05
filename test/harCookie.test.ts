@@ -34,7 +34,10 @@ describe("cookieStringFromHar", () => {
   test("extracts TIS cookies and ignores other hosts", () => {
     const har = harFile([
       entry("https://example.com/x", "OTHER=nope"),
-      entry("https://techinfo.toyota.com/t3Portal/", "TISESSIONID=abc123; foo=bar"),
+      entry(
+        "https://techinfo.toyota.com/t3Portal/",
+        "TISESSIONID=abc123; foo=bar",
+      ),
     ]);
     const { cookieString, names } = cookieStringFromHar(har);
     assert.deepEqual(names.sort(), ["TISESSIONID", "foo"]);
@@ -74,14 +77,17 @@ describe("cookieStringFromHar", () => {
             },
           ],
         },
-      })
+      }),
     );
     assert.ok(cookieStringFromHar(p).cookieString.includes("TISESSIONID=xyz"));
   });
 
   test("throws when the HAR has no TISESSIONID (not a logged-in capture)", () => {
     const har = harFile([entry("https://techinfo.toyota.com/a", "foo=bar")]);
-    assert.throws(() => cookieStringFromHar(har), /No TISESSIONID cookie found/);
+    assert.throws(
+      () => cookieStringFromHar(har),
+      /No TISESSIONID cookie found/,
+    );
   });
 
   test("skips entries with an unparseable URL", () => {
@@ -89,7 +95,9 @@ describe("cookieStringFromHar", () => {
       entry("not a url", "TISESSIONID=ignored"),
       entry("https://techinfo.toyota.com/a", "TISESSIONID=good"),
     ]);
-    assert.ok(cookieStringFromHar(har).cookieString.includes("TISESSIONID=good"));
+    assert.ok(
+      cookieStringFromHar(har).cookieString.includes("TISESSIONID=good"),
+    );
   });
 });
 
@@ -100,7 +108,7 @@ describe("cookieStringFromPlaywright", () => {
         { name: "TISESSIONID", value: "a" },
         { name: "b", value: "c" },
       ]),
-      "TISESSIONID=a; b=c"
+      "TISESSIONID=a; b=c",
     );
   });
 });
@@ -109,7 +117,10 @@ describe("emitCookie", () => {
   test("writes an owner-only (0600) shell line", () => {
     const out = join(tmp(), "tis.env");
     emitCookie("TISESSIONID=secret", out);
-    assert.equal(readFileSync(out, "utf8"), "TIS_COOKIE='TISESSIONID=secret'\n");
+    assert.equal(
+      readFileSync(out, "utf8"),
+      "TIS_COOKIE='TISESSIONID=secret'\n",
+    );
     assert.equal(statSync(out).mode & 0o777, 0o600);
   });
 
@@ -118,7 +129,7 @@ describe("emitCookie", () => {
     writeFileSync(out, "pre-existing\n");
     assert.throws(
       () => emitCookie("TISESSIONID=secret", out),
-      /Refusing to write the session cookie to existing file/
+      /Refusing to write the session cookie to existing file/,
     );
     // The credential must not have landed in the untrusted file.
     assert.equal(readFileSync(out, "utf8"), "pre-existing\n");

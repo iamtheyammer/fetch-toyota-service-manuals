@@ -26,5 +26,5 @@ export const client = wrapper(
       "Sec-Fetch-Site": "cross-site",
       "Sec-GPC": "1",
     },
-  })
+  }),
 );

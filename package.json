@@ -25,7 +25,7 @@
     "@types/qs": "^6.9.7",
     "@types/tough-cookie": "^4.0.2",
     "nodemon": "^2.0.16",
-    "prettier": "^2.6.2",
+    "prettier": "^3",
     "ts-node": "^10.7.0",
     "typescript": "^5.9"
   },
@@ -38,7 +38,7 @@
     "lookup-codes": "NODE_TLS_REJECT_UNAUTHORIZED=0 ts-node tools/lookupCodes.ts",
     "download-documents": "NODE_TLS_REJECT_UNAUTHORIZED=0 ts-node tools/downloadDocuments.ts",
     "refresh-session": "NODE_TLS_REJECT_UNAUTHORIZED=0 ts-node tools/refreshSession.ts",
-    "format": "prettier --write \"src/**/*.ts\" \"tools/**/*.ts\"",
+    "format": "prettier --write \"src/**/*.ts\" \"tools/**/*.ts\" \"test/**/*.ts\"",
     "playwright-setup": "playwright install chromium && playwright install-deps chromium",
     "watch": "NODE_TLS_REJECT_UNAUTHORIZED=0 nodemon src/index.ts"
   }

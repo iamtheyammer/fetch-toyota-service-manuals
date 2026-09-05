@@ -37,7 +37,9 @@ describe("parseTitle", () => {
         <fig type="pdf">PS001</fig>
       </System>
     </TitleList>`;
-    assert.deepEqual(await parseTitle(xml), { "Power Source (PS001)": "PS001.pdf" });
+    assert.deepEqual(await parseTitle(xml), {
+      "Power Source (PS001)": "PS001.pdf",
+    });
   });
 
   test("handles a single entry (object, not array)", async () => {
@@ -63,7 +65,9 @@ describe("parseTitle", () => {
         <fig type="html">NX001</fig>
       </System>
     </TitleList>`;
-    assert.deepEqual(await parseTitle(xml), { "Real Page (PS001)": "PS001.pdf" });
+    assert.deepEqual(await parseTitle(xml), {
+      "Real Page (PS001)": "PS001.pdf",
+    });
   });
 
   test("replaces slashes in names so they stay one path segment", async () => {

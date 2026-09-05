@@ -32,10 +32,13 @@ no longer completes (see [Authentication](#3-authentication-important) below).
 - **A valid TIS subscription** — purchase from <https://techinfo.toyota.com>.
   The 48-hour subscription is sufficient.
 - **A Debian-based Linux host** (Ubuntu, etc.). Commands below assume `apt`.
-- **Node.js ≥ 16.3** with `corepack` available, and `git`, `unzip`, and `zip`.
+- **Node.js ≥ 24**, plus `git`, `unzip`, and `zip`. The tool runs its
+  TypeScript sources directly, which needs Node's unflagged type stripping
+  (Node ≥ 23.6); there is no build step.
+- **Yarn 1.x** — see [§2.1](#21-get-the-code-and-dependencies).
 
 ```bash
-node -v                # must be >= 16.3
+node -v                # must be >= 24
 sudo apt-get install -y git unzip zip
 ```
 
@@ -46,8 +49,10 @@ sudo apt-get install -y git unzip zip
 ### 2.1 Get the code and dependencies
 
 This project's lockfile is **Yarn Classic (v1)** format, so the install must use
-Yarn 1.x. The `packageManager` field in `package.json` pins `yarn@1.22.22`, so
-`corepack` will select it automatically.
+Yarn 1.x. The `packageManager` field in `package.json` pins `yarn@1.22.22`.
+
+Node bundled `corepack` up to version 24, and it selects that pinned Yarn
+automatically:
 
 ```bash
 git clone https://github.com/iamtheyammer/fetch-toyota-service-manuals
@@ -56,48 +61,44 @@ corepack enable
 yarn install --frozen-lockfile
 ```
 
+**Node 25 and newer no longer ship corepack.** Install it from your
+distribution (Arch: `pacman -S corepack`; Debian/Ubuntu: `npm i -g corepack`),
+or skip corepack and install Yarn 1 directly into a user-owned prefix, which
+needs no root:
+
+```bash
+npm install -g --prefix "$HOME/.local" yarn@1.22.22   # ~/.local/bin must be on PATH
+yarn install --frozen-lockfile
+```
+
 ### 2.2 Install the Playwright browser (Chromium)
+
+```bash
+yarn playwright-setup     # downloads Chromium and its system libraries
+```
+
+That runs `playwright install chromium && playwright install-deps chromium`.
+Current Playwright knows Ubuntu 24.04's `t64` library names, so the manual
+`apt-get` list that older versions needed is no longer required.
+
+`playwright install-deps` only supports Debian/Ubuntu. On other distributions
+run just the browser download and let your package manager provide Chromium's
+libraries:
 
 ```bash
 yarn playwright install chromium
 ```
 
-Then install Chromium's system libraries. On **Ubuntu 24.04+** several libraries
-were renamed with a `t64` suffix, which the pinned Playwright's bundled list
-does not know about. If `playwright install-deps chromium` fails with
-`Package 'libasound2' has no installation candidate`, install the renamed set
-directly:
+### 2.3 Verify the browser
 
 ```bash
-sudo apt-get install -y --no-install-recommends \
-  libasound2t64 libatk-bridge2.0-0t64 libatk1.0-0t64 libatspi2.0-0t64 libcairo2 \
-  libcups2t64 libdbus-1-3 libdrm2 libgbm1 libglib2.0-0t64 libnspr4 libnss3 \
-  libpango-1.0-0 libwayland-client0 libx11-6 libxcb1 libxcomposite1 libxdamage1 \
-  libxext6 libxfixes3 libxkbcommon0 libxrandr2 xvfb libfontconfig1 libfreetype6 \
-  fonts-liberation fonts-noto-color-emoji fonts-unifont
+node --input-type=module -e "import {chromium} from 'playwright'; const b = await chromium.launch(); console.log('OK', b.version()); await b.close();"
 ```
 
-### 2.3 Known issue: incomplete Chromium extraction on newer Node
-
-The pinned Playwright's bundled unzip can silently extract only a few files of
-the Chromium archive on Node ≥ 24, leaving the browser broken (the `chrome`
-binary missing). Symptom: `browserType.launch: Executable doesn't exist`.
-
-**Fix** — extract the already-downloaded archive with the system `unzip`:
-
-```bash
-# The download succeeds; only the extraction is broken. The zip is left in /tmp.
-DEST=~/.cache/ms-playwright/chromium-1055
-rm -rf "$DEST" && mkdir -p "$DEST"
-unzip -q /tmp/playwright-download-chromium-*-1055.zip -d "$DEST"
-touch "$DEST/INSTALLATION_COMPLETE"
-```
-
-Verify the browser launches:
-
-```bash
-node -e "require('playwright').chromium.launch().then(b=>b.close()).then(()=>console.log('OK'))"
-```
+> Older pinned Playwright releases silently extracted only part of the Chromium
+> archive on Node ≥ 24, leaving no `chrome` binary and a
+> `browserType.launch: Executable doesn't exist` failure that had to be
+> unpacked by hand. Current Playwright is unaffected.
 
 ---
 
@@ -478,8 +479,7 @@ The archive contains a single descriptive top-level folder:
 | `Doesn't appear we're logged into TIS … custom-login-response` | Email/password login is dead on current TIS. Use the cookie method ([§3](#3-authentication-important)). |
 | `… concurrentLoginFailure.html` | Another TIS session is active. Close other TIS tabs/devices, grab a fresh cookie, and re-run (resume continues). |
 | Exit code `2`, "TIS session appears to have expired" | The cookie timed out mid-run. Capture a fresh cookie and re-run the same command; resume re-fetches only what's missing. |
-| `Executable doesn't exist` (Chromium) | Incomplete browser extraction on newer Node — see [§2.3](#23-known-issue-incomplete-chromium-extraction-on-newer-node). |
-| `Package 'libasound2' has no installation candidate` | Ubuntu 24.04+ `t64` library rename — see [§2.2](#22-install-the-playwright-browser-chromium). |
+| `Executable doesn't exist` (Chromium) | The browser was never downloaded — run `yarn playwright-setup` ([§2.2](#22-install-the-playwright-browser-chromium)). |
 | A few `Error saving page …: TimeoutError` lines | Transient per-page timeouts. Re-run the same command once; resume grabs the missing pages. |
 | `Manual … doesn't appear to exist` | Wrong ID, or the cookie isn't authenticating. Re-check the `RM…`/`EM…` code and that `TIS_COOKIE` contains a valid `TISESSIONID`. |
 

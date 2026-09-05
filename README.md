@@ -29,13 +29,20 @@ These manuals are copyrighted by Toyota, so don't share them!
 
 ### Set up Node and Yarn
 
-If Node.js >v16.3 and `yarn` are on your system, skip these steps.
+If Node.js >=v24 and `yarn` are on your system, skip these steps.
 
-1. Install Node.js 16.3 or newer (with corepack)-- you can find instructions for your OS on Google.
+1. Install Node.js 24 or newer-- you can find instructions for your OS on Google.
    Generically, Windows users should install either in WSL or via https://nodejs.org,
    Mac users should install via [Homebrew](https://brew.sh),
    and Linux users should follow instructions online for their distro.
-2. Run `corepack enable`-- this gets Yarn working.
+   Node 24+ is required because this tool runs its TypeScript sources directly,
+   with no build step.
+2. Get Yarn 1.x working. Node bundled `corepack` through version 24, so
+   `corepack enable` is enough there. **Node 25 and newer no longer ship
+   corepack**-- install it from your distro, or install Yarn straight into a
+   user-owned prefix (no root needed):
+   `npm install -g --prefix "$HOME/.local" yarn@1.22.22`, with `~/.local/bin`
+   on your `PATH`.
 
 ### Get code and dependencies
 
@@ -45,6 +52,18 @@ Since this project uses Playwright (a headless browser interop library), we'll n
 2. Move into the new folder with `cd fetch-toyota-service-manuals`
 3. Run `yarn` to install dependencies according to the lockfile.
 4. Run `yarn playwright-setup` to download and set up Playwright (**this is important!**)
+
+> `yarn playwright-setup` also runs `playwright install-deps`, which only
+> supports Debian/Ubuntu. On other distributions run `yarn playwright install
+> chromium` instead and let your package manager supply Chromium's libraries.
+
+### Development
+
+- `yarn test` runs the offline test suite (Node's built-in test runner; no
+  network or TIS subscription needed).
+- `yarn typecheck` type-checks with `tsc`. There is no build step-- Node runs
+  the TypeScript directly, so `tsc` is only a checker.
+- `yarn format` formats with Prettier.
 
 ### Get your car's manual IDs
 

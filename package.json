@@ -30,20 +30,20 @@
     "typescript": "^7"
   },
   "scripts": {
-    "start": "NODE_TLS_REJECT_UNAUTHORIZED=0 node src/index.ts",
-    "start:inspect": "NODE_TLS_REJECT_UNAUTHORIZED=0 node --inspect-brk src/index.ts",
+    "start": "node src/index.ts",
+    "start:inspect": "node --inspect-brk src/index.ts",
     "test": "node --test test/*.test.ts",
     "test:browser": "node --test test/browser/*.test.ts",
     "typecheck": "tsc --noEmit",
     "extract-cookie": "node tools/extractCookie.ts",
-    "lookup-codes": "NODE_TLS_REJECT_UNAUTHORIZED=0 node tools/lookupCodes.ts",
-    "download-documents": "NODE_TLS_REJECT_UNAUTHORIZED=0 node tools/downloadDocuments.ts",
+    "lookup-codes": "node tools/lookupCodes.ts",
+    "download-documents": "node tools/downloadDocuments.ts",
     "verify": "node tools/verify.ts",
     "archive": "node tools/archive.ts",
-    "fetch-vehicle": "NODE_TLS_REJECT_UNAUTHORIZED=0 node tools/fetchVehicle.ts",
-    "refresh-session": "NODE_TLS_REJECT_UNAUTHORIZED=0 node tools/refreshSession.ts",
+    "fetch-vehicle": "node tools/fetchVehicle.ts",
+    "refresh-session": "node tools/refreshSession.ts",
     "format": "prettier --write \"src/**/*.ts\" \"tools/**/*.ts\" \"test/**/*.ts\"",
     "playwright-setup": "playwright install chromium && playwright install-deps chromium",
-    "watch": "NODE_TLS_REJECT_UNAUTHORIZED=0 node --watch src/index.ts"
+    "watch": "node --watch src/index.ts"
   }
 }

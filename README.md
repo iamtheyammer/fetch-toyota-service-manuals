@@ -224,17 +224,26 @@ Options
 
 Questions I think someone might ask, not questions anyone has ever asked before.
 
-### Why does Node spit out a certificate warning?
+### Why did Node used to spit out a certificate warning?
 
-You might see a warning like the following print out after `Logging into TIS...`:
+Older versions of this tool ran every command with
+`NODE_TLS_REJECT_UNAUTHORIZED=0`, which printed:
 
 ```
 (node:94450) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.
-(Use `node --trace-warnings ...` to show where the warning was created)
 ```
 
-Node.js doesn't seem to accept Toyota's SSL certificate, so this is required to stop Axios
-(which is used for login and downloading EWDs) from failing every request.
+Node didn't accept Toyota's SSL certificate at the time, so it was needed to
+stop requests failing. **Toyota's certificate chain validates correctly now**,
+so the flag has been removed -- verified against the portal, a repair-manual
+table of contents, and the EWD endpoints with verification enabled.
+
+That matters beyond tidiness: the variable disabled certificate verification
+*globally* for the process, for every host, while the tool was sending your TIS
+session cookie on each request.
+
+If you ever do hit a certificate error, don't reach for that variable -- it
+would mean something has changed and is worth reporting as an issue.
 
 ### Which vehicles does this work with?
 

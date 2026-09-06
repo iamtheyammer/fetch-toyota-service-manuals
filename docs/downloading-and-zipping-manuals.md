@@ -330,8 +330,10 @@ yarn start -m RM36Q0U@2022 -m EM36Q0U
 ```
 
 - `-m` may be repeated for multiple manuals.
-- The `start` script sets `NODE_TLS_REJECT_UNAUTHORIZED=0` because Node rejects
-  Toyota's TLS certificate; this is expected and required.
+- TLS verification is on. Earlier versions ran with
+  `NODE_TLS_REJECT_UNAUTHORIZED=0` because Node rejected Toyota's certificate;
+  the chain validates correctly now, so that (process-wide, all-hosts) bypass
+  has been removed.
 
 For a long, unattended run, log to a file and run it detached:
 

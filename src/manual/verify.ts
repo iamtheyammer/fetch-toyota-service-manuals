@@ -124,3 +124,49 @@ export function verifyEwdDir(ewdDir: string): VerifyResult {
     complete: missing.length === 0 && stubs.length === 0,
   };
 }
+
+/** A group of files that are all exactly the same number of bytes. */
+export interface SizeCluster {
+  size: number;
+  files: string[];
+}
+
+/**
+ * Default threshold for treating an identical-size group as suspicious.
+ *
+ * Calibrated against real archives: a verified-good 5,189-page manual set's
+ * largest identical-size group was 14 files, while two corrupted sets had
+ * 1,914 and 973 files at exactly 27,043 bytes.
+ */
+export const SUSPICIOUS_CLUSTER_SIZE = 20;
+
+/**
+ * Groups of identically sized files, largest first.
+ *
+ * This is how a saved interstitial is caught. TIS serves its "Concurrent Login
+ * Alert" with HTTP 200 at the requested page's own URL, so it renders to a
+ * valid multi-kilobyte PDF that satisfies every existence and size check --
+ * a run can report 1915/1915 complete while nearly all of it is one warning
+ * page repeated. Genuine manual pages differ in length; hundreds of pages
+ * agreeing to the byte do not happen by chance.
+ *
+ * Deliberately content-agnostic: Playwright embeds subsetted fonts, so the
+ * words are not recoverable from the PDF without an external tool, and this
+ * has to work without one.
+ */
+export function findIdenticalSizeClusters(
+  files: { path: string; size: number }[],
+  minCluster: number = SUSPICIOUS_CLUSTER_SIZE,
+): SizeCluster[] {
+  const bySize = new Map<number, string[]>();
+  for (const f of files) {
+    const list = bySize.get(f.size);
+    if (list) list.push(f.path);
+    else bySize.set(f.size, [f.path]);
+  }
+
+  return [...bySize.entries()]
+    .filter(([, paths]) => paths.length >= minCluster)
+    .map(([size, paths]) => ({ size, files: paths }))
+    .sort((a, b) => b.files.length - a.files.length);
+}

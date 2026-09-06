@@ -4,6 +4,7 @@ import {
   isLoginRedirectUrl,
   looksLikeLoginPage,
   looksLikeSessionLost,
+  looksLikeConcurrentLoginPage,
   SessionExpiredError,
 } from "../src/api/session.ts";
 
@@ -103,5 +104,62 @@ describe("SessionExpiredError", () => {
     assert.ok(e instanceof Error);
     assert.equal(e.name, "SessionExpiredError");
     assert.match(e.message, /session appears to have expired/i);
+  });
+});
+
+describe("looksLikeConcurrentLoginPage", () => {
+  /**
+   * The failure this exists to stop: TIS serves its "Concurrent Login Alert"
+   * interstitial with HTTP 200 *at the requested page's own URL*, so a
+   * URL-based check sees nothing wrong and Playwright renders the alert to a
+   * PDF that is a perfectly valid, multi-kilobyte file. Size and existence
+   * checks all pass, so a run reports 100% complete while a quarter of the
+   * archive is the same warning page.
+   */
+  const ALERT = `<html><head><title>TIS</title></head><body>
+    <h1>Concurrent Login Alert</h1>
+    <p>Someone has logged into the system using your username and password.</p>
+    <p>Password access to this system is limited to an single user for each user ID.</p>
+    </body></html>`;
+
+  test("flags the concurrent login interstitial", () => {
+    assert.equal(looksLikeConcurrentLoginPage(ALERT), true);
+  });
+
+  test("flags it by the body sentence alone, without the heading", () => {
+    assert.equal(
+      looksLikeConcurrentLoginPage(
+        "<html><body>Someone has logged into the system using your username and password.</body></html>",
+      ),
+      true,
+    );
+  });
+
+  test("is case-insensitive", () => {
+    assert.equal(
+      looksLikeConcurrentLoginPage(
+        "<html><body>CONCURRENT LOGIN ALERT</body></html>",
+      ),
+      true,
+    );
+  });
+
+  test("does not flag a real manual page", () => {
+    const real = `<html><body><h1>COMPONENTS</h1>
+      <p>2008 MY FJ Cruiser [07-2007 - ]</p>
+      <table><tr><td>CLUTCH ACCUMULATOR ASSEMBLY</td></tr></table>
+      </body></html>`;
+    assert.equal(looksLikeConcurrentLoginPage(real), false);
+  });
+
+  test("does not flag a page that merely mentions login in passing", () => {
+    // A repair page could legitimately discuss a "login" procedure for a
+    // vehicle system; only the specific alert wording counts.
+    assert.equal(
+      looksLikeConcurrentLoginPage(
+        "<html><body>Perform the dealer login procedure on Techstream.</body></html>",
+      ),
+      false,
+    );
   });
 });

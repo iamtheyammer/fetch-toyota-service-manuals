@@ -3,7 +3,12 @@ import { join } from "path";
 import type { Page } from "playwright";
 import { TIS_ORIGIN } from "../api/client.ts";
 import type { ParsedToC } from "./parseToC.ts";
-import { isLoginRedirectUrl, SessionExpiredError } from "../api/session.ts";
+import {
+  isLoginRedirectUrl,
+  looksLikeConcurrentLoginPage,
+  ConcurrentLoginError,
+  SessionExpiredError,
+} from "../api/session.ts";
 import { isAlreadyDownloaded, MIN_VALID_PDF_BYTES } from "../api/files.ts";
 import { sanitizeName } from "../manual/toc.ts";
 
@@ -44,6 +49,14 @@ async function recursivelyDownloadManual(
         if (isLoginRedirectUrl(page.url())) {
           throw new SessionExpiredError();
         }
+        // The concurrent-login alert is served with HTTP 200 at this same URL,
+        // so there is no redirect to catch above. Rendering it produces a valid
+        // multi-kilobyte PDF that passes every existence and size check, which
+        // is how an entire manual can be saved as copies of one warning page.
+        // Inspect the content before committing anything to disk.
+        if (looksLikeConcurrentLoginPage(await page.content())) {
+          throw new ConcurrentLoginError();
+        }
         await page.addScriptTag({
           content: `document.querySelector(".footer").remove()`,
         });
@@ -52,8 +65,10 @@ async function recursivelyDownloadManual(
           margin: { top: 1, right: 1, bottom: 1, left: 1 },
         });
       } catch (e) {
-        // A session expiry is fatal for the whole run; let it propagate.
+        // A lost session is fatal for the whole run; let it propagate rather
+        // than continuing to write alert pages for every remaining page.
         if (e instanceof SessionExpiredError) throw e;
+        if (e instanceof ConcurrentLoginError) throw e;
         console.error(`Error saving page ${name}: ${e}`);
       }
 

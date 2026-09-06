@@ -1,7 +1,9 @@
 import { existsSync, readFileSync, readdirSync, statSync } from "fs";
+import { execFileSync } from "child_process";
 import { join } from "path";
 import type { ParsedToC } from "../genericManual/parseToC.ts";
 import { sanitizeName } from "./paths.ts";
+import { looksLikeConcurrentLoginPage } from "../api/session.ts";
 import { MIN_VALID_PDF_BYTES, MIN_VALID_EWD_FILE_BYTES } from "../api/files.ts";
 
 /**
@@ -169,4 +171,69 @@ export function findIdenticalSizeClusters(
     .filter(([, paths]) => paths.length >= minCluster)
     .map(([size, paths]) => ({ size, files: paths }))
     .sort((a, b) => b.files.length - a.files.length);
+}
+
+/**
+ * Extract a PDF's first-page text, or undefined if it cannot be read.
+ *
+ * Shells out to poppler's pdftotext. Doing this in-process is not practical:
+ * Playwright embeds subsetted fonts, so a PDF's content streams hold glyph ids
+ * rather than words, and recovering text means interpreting each font's
+ * ToUnicode CMap. pdftotext already does that correctly.
+ */
+export function pdfFirstPageText(path: string): string | undefined {
+  try {
+    return execFileSync("pdftotext", ["-l", "1", path, "-"], {
+      encoding: "utf8",
+      maxBuffer: 4 * 1024 * 1024,
+      stdio: ["ignore", "pipe", "ignore"],
+    });
+  } catch {
+    return undefined;
+  }
+}
+
+/** True if poppler's pdftotext is available to confirm suspected pages. */
+export function canReadPdfText(): boolean {
+  try {
+    execFileSync("pdftotext", ["-v"], { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export type ClusterVerdict = "confirmed" | "clean" | "unknown";
+
+/**
+ * Decide whether a suspected cluster really is TIS's interstitial by reading
+ * the pages, rather than trusting the size coincidence alone.
+ *
+ * Identical byte sizes are only a signal: a manual can legitimately contain
+ * many short pages that happen to render to the same length, and deleting real
+ * content on that basis would be worse than the bug. Sampling the actual text
+ * turns the heuristic into a decision, and "unknown" is returned rather than
+ * guessed when pdftotext is unavailable.
+ */
+export function classifyCluster(
+  files: string[],
+  sample = 5,
+): { verdict: ClusterVerdict; checked: number; matched: number } {
+  if (!canReadPdfText()) return { verdict: "unknown", checked: 0, matched: 0 };
+
+  let checked = 0;
+  let matched = 0;
+  for (const f of files.slice(0, sample)) {
+    const text = pdfFirstPageText(f);
+    if (text === undefined) continue;
+    checked++;
+    if (looksLikeConcurrentLoginPage(text)) matched++;
+  }
+  if (!checked) return { verdict: "unknown", checked, matched };
+  return {
+    verdict:
+      matched === checked ? "confirmed" : matched > 0 ? "confirmed" : "clean",
+    checked,
+    matched,
+  };
 }

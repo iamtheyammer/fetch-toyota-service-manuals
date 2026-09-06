@@ -119,8 +119,19 @@ cookie. The tool reuses that exact session.
 TIS enforces **one active session per account**. While the tool is downloading:
 
 - Do **not** log in to TIS from another tab/device.
-- Do **not** keep extra TIS tabs open that might refresh and create a competing
-  session.
+- **Close the browser you captured the cookie from before starting a download.**
+  Simply leaving a TIS tab open is enough: the portal keeps rotating the
+  session id, the tool's browser context goes on presenting the id it captured,
+  and TIS treats that as a second login.
+- Do not log *out* -- that ends the session you just captured. Close the tab.
+
+This matters more than it sounds. When TIS decides there is a concurrent login
+it does not fail the request: it answers **HTTP 200 with a "Concurrent Login
+Alert" page at the requested page's own URL**, which renders to a perfectly
+valid PDF. A run in that state saves the same warning page over and over while
+appearing to succeed -- one real download produced 1,914 of them in a single
+manual. The tool now detects this and aborts, and `yarn verify` detects any
+already on disk (see [§6](#6-verifying-completeness)).
 
 A concurrent login invalidates the tool's session and you'll see the run abort
 (`concurrentLoginFailure.html`). Re-running resumes (see
@@ -408,6 +419,24 @@ yarn verify --dir manuals/lexus_lx600_2024
 ```
 
 It exits non-zero when anything is missing, so it can gate an archive step.
+
+It also looks for saved **interstitials** -- copies of TIS's "Concurrent Login
+Alert" that were rendered to PDF instead of real pages. These pass every
+existence and size check, so they are found by a different route: every copy
+renders to an identical byte size, and genuine manual pages vary. Any group of
+20 or more identically sized pages is reported, then confirmed by reading the
+text with `pdftotext` (from poppler-utils) where available, so real content is
+never mistaken for an error page.
+
+To clear confirmed ones and refetch them:
+
+```bash
+yarn verify --dir manuals/my_car --delete-interstitials
+yarn start -o manuals/my_car -m ...     # resume refetches only what is missing
+```
+
+Only content-confirmed files are deleted; a size coincidence alone is never
+enough.
 
 <details>
 <summary>Equivalent by hand</summary>

@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, statSync } from "fs";
+import { existsSync, readdirSync, statSync, unlinkSync } from "fs";
 import { join } from "path";
 import commandLineArgs from "command-line-args";
 import {
@@ -6,6 +6,8 @@ import {
   verifyEwdDir,
   findIdenticalSizeClusters,
   SUSPICIOUS_CLUSTER_SIZE,
+  classifyCluster,
+  canReadPdfText,
 } from "../src/manual/verify.ts";
 import { DEFAULT_OUT_DIR } from "../src/manual/paths.ts";
 
@@ -81,6 +83,8 @@ function main() {
   const opts = commandLineArgs([
     { name: "dir", type: String, defaultValue: DEFAULT_OUT_DIR },
     { name: "quiet", type: Boolean, defaultValue: false },
+    // Destructive, so opt-in, and acts only on content-confirmed files.
+    { name: "delete-interstitials", type: Boolean, defaultValue: false },
   ]);
 
   const dirs = findPublicationDirs(opts.dir);
@@ -143,14 +147,56 @@ function main() {
         `size; this is what a saved error or login-alert page looks like.`,
     );
     for (const c of clusters.slice(0, 5)) {
-      console.log(`  ${c.files.length} files of exactly ${c.size} bytes`);
+      // Confirm by reading the pages rather than trusting the size match: a
+      // manual can legitimately hold many short pages of equal length, and
+      // deleting real content on a coincidence would be worse than the bug.
+      const { verdict, checked, matched } = classifyCluster(c.files);
+      const label =
+        verdict === "confirmed"
+          ? `CONFIRMED interstitial (${matched}/${checked} sampled pages)`
+          : verdict === "clean"
+            ? "looks like genuine content -- not an interstitial"
+            : "UNCONFIRMED (install poppler's pdftotext to check)";
+      console.log(
+        `  ${c.files.length} files of exactly ${c.size} bytes -- ${label}`,
+      );
       for (const f of c.files.slice(0, 2)) console.log(`       e.g. ${f}`);
-      console.log(`       inspect:  pdftotext "${c.files[0]}" - | head -3`);
+      if (verdict !== "confirmed") {
+        console.log(`       inspect:  pdftotext "${c.files[0]}" - | head -3`);
+      }
+
+      if (opts["delete-interstitials"]) {
+        if (verdict !== "confirmed") {
+          // Never delete on the size coincidence alone.
+          console.log(
+            "       not deleting: only content-confirmed interstitials are removed",
+          );
+        } else {
+          let removed = 0;
+          for (const f of c.files) {
+            try {
+              unlinkSync(f);
+              removed++;
+            } catch (e: any) {
+              console.error(`       could not delete ${f}: ${e.message}`);
+            }
+          }
+          console.log(
+            `       deleted ${removed} file(s) -- re-run the download to refetch`,
+          );
+        }
+      }
     }
     console.log(
-      "\nIf these are interstitials, delete them and re-run the download; " +
-        "resume re-fetches only what is missing.",
+      "\nDelete the confirmed files and re-run the download; resume re-fetches " +
+        "only what is missing.",
     );
+    if (!canReadPdfText()) {
+      console.log(
+        "Install poppler-utils (pdftotext) for a definitive answer instead of " +
+          "a size heuristic.",
+      );
+    }
   }
   if (allComplete) {
     console.log("All publications are complete.");

@@ -67,20 +67,21 @@ export default function processCLIArgs(): CLIArgs {
             "{bold Required.} Manual ID(s) to download. Use multiple times for multiple manuals. For non-electrical manuals, add @YEAR to the end to only download pages for that year.",
         },
         {
+          name: "cookie-string -c",
+          typeLabel: "{underline abc1234}",
+          description:
+            "{bold Required.} Your TIS session cookie (or set {underline TIS_COOKIE}). Copy the Cookie request header from a logged-in TIS page, or use {underline yarn extract-cookie}.",
+        },
+        {
           name: "email -e",
           typeLabel: "{underline me@example.com}",
-          description: "{bold Required.} Your TIS email.",
+          description:
+            "{bold Legacy, no longer works.} TIS replaced its one-shot login with a multi-step flow, so this cannot authenticate. Use --cookie-string.",
         },
         {
           name: "password -p",
           typeLabel: "{underline abc1234}",
-          description: "{bold Required.} Your TIS password.",
-        },
-        {
-          name: "cookie-string -c",
-          typeLabel: "{underline abc1234}",
-          description:
-            "Your TIS cookie string. If you don't know what this is, don't use it.",
+          description: "{bold Legacy, no longer works.} See --email.",
         },
         {
           name: "headed -h",

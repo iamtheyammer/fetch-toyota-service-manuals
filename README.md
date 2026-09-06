@@ -102,19 +102,42 @@ Other commands:
 
 1. If you haven't, purchase a TIS subscription from [here](https://techinfo.toyota.com). The 48 hour subscription is fine.
 2. Once purchased, sign in. It can take a minute or two for your login to start working after purchase.
-3. Click the `TIS` tab at the top left of your screen.
-4. Select your car's brand (Toyota, Scion, or Lexus), model, and year. Click Search.
-5. Click the `RM` (repair manual) tab.
-6. Click any document that appears.
-7. In the URL of the pop-out window, copy the `RM12345`-like code.
+3. Get a session cookie (see [Authentication](#authentication)).
+4. Ask the tool:
+
+```bash
+yarn lookup-codes --division TOYOTA --model "FJ Cruiser" --year 2008
+```
+
+It drives the TIS catalog and prints every publication the vehicle has -- repair
+manual, wiring diagrams, body/collision, new car features, wire harness -- each
+with the exact `-m` flag to pass to the downloader, and lists standalone
+bulletins separately.
+
+Model strings must match TIS exactly, and they are inconsistent between
+divisions (`LX600` but `FJ Cruiser`). Get one wrong and the error lists every
+valid option for that division, so it takes one retry rather than guesswork.
+
+<details>
+<summary>Finding the codes by hand instead</summary>
+
+1. Click the `TIS` tab at the top left of your screen.
+2. Select your car's brand (Toyota, Scion, or Lexus), model, and year. Click Search.
+3. Click the `RM` (repair manual) tab.
+4. Click any document that appears.
+5. In the URL of the pop-out window, copy the `RM12345`-like code.
    The full URL should be something like `https://techinfo.toyota.com/t3Portal/resources/jsp/siviewer/index.jsp?dir=rm/THIS IS THE CODE&href=xhtml/....`.
-8. Save this code for later-- you'll need it!
-9. Close the pop-out window, and go back to TIS.
-10. Click the `EWD` (electrical wiring diagram) tab.
-    The full URL should be something like `https://techinfo.toyota.com/t3Portal/ewdappu/index.jsp?ewdNo=THIS IS THE CODE&model=Prius...`
-11. In the URL of the pop-out window, copy the `EM12345`-like code.
-12. Save the code for later.
-13. If you want diagrams for more cars, repeat those steps for each car.
+6. Close the pop-out window, and go back to TIS.
+7. Click the `EWD` (electrical wiring diagram) tab.
+   The full URL should be something like `https://techinfo.toyota.com/t3Portal/ewdappu/index.jsp?ewdNo=THIS IS THE CODE&model=Prius...`
+8. Copy the `EM12345`-like code.
+9. Repeat for each car you want.
+
+Note that older vehicles split their content across several publications
+(transmission, collision, new car features, wire harness) that this procedure
+will not surface. `yarn lookup-codes` finds those.
+
+</details>
 
 ### Decide if you only want your model year's pages
 
@@ -130,17 +153,61 @@ And, yes, you can specify a year that the car wasn't made in-- but, if you do, t
 
 ### Download your manuals!
 
-To download manuals, run `yarn start -e YOUREMAIL -p YOURPASSWORD -m MANUALID -m ANOTHERMANUALID -m ...` with
-the manual IDs replaced with yours. You can use `-m` an unlimited number of times.
+```bash
+export TIS_COOKIE='...'                     # see Authentication, below
+yarn start -o manuals/my_car -m RM12345@2016 -m EM12345
+```
 
-The script will automatically log in as you, read each manual's Table of Contents, and download every page unless you specify a year-- see [above](#decide-if-you-only-want-your-model-years-pages).
+`-m` may be repeated as many times as you like. The tool reads each manual's
+table of contents and downloads every page, unless you specify a year-- see
+[above](#decide-if-you-only-want-your-model-years-pages).
 
-**DO NOT log in to TIS while the bot is downloading.** TIS enforces a one-session-at-a-time policy, and if
-you log in while it's downloading you'll have to start over. If you know what you're doing, you can use your browser Cookie to log in instead of your email and password. See [the command-line options](#all-command-line-options) for more info.
+**Run it a second time when it finishes.** A handful of pages hit a navigation
+timeout on any long run; they're logged and skipped. Re-running the identical
+command re-fetches only what's missing, because already-downloaded files are
+skipped. (`yarn fetch-vehicle` does this for you.)
 
-**Manuals take a while.** It can take upwards of an hour to download manuals for a single car. If you're downloading multiple manuals, it can take a long time. Be patient. Stay connected to the internet.
+**DO NOT log in to TIS while the bot is downloading.** TIS enforces a
+one-session-at-a-time policy, and logging in elsewhere invalidates the session
+the tool is using. The run aborts cleanly with exit code 2 rather than saving
+login pages as manual content; grab a fresh cookie and re-run to resume.
 
-You can find your downloaded manuals at `manuals/MANUALID`.
+**Manuals take a while.** A full vehicle can take an hour or more. A 2024 Lexus
+LX600 came to 5,350 pages / 873 MB across four publications.
+
+Check what you got:
+
+```bash
+yarn verify --dir manuals/my_car
+```
+
+#### Authentication
+
+**Email/password login no longer works.** TIS replaced its one-shot login with
+a multi-step flow (username, password, then a 2FA step), which the tool's
+scripted login cannot complete. Your credentials may be perfectly valid-- the
+*method* is outdated. The `-e` / `-p` flags remain only for older TIS
+deployments.
+
+Use a session cookie instead: log in with your browser, then hand the tool the
+cookie your browser is using.
+
+- **Simplest:** open DevTools > Network on a logged-in TIS page, click any
+  `techinfo.toyota.com` request, and copy the `Cookie` request header. Then
+  `export TIS_COOKIE='...'`.
+- **From a HAR:** `yarn extract-cookie ~/Downloads/techinfo.har` prints it, or
+  `yarn extract-cookie <har> tis.env` writes an owner-only file to `source`.
+  Note that Chrome and Chromium browsers (including Brave) now **strip cookies
+  from HAR exports by default**-- if `extract-cookie` reports no `TISESSIONID`,
+  that's why. Firefox's export includes them.
+- **Scripted:** `yarn refresh-session` drives the real login including the 2FA
+  code.
+
+Don't use `document.cookie` in the console: the session cookie is `httpOnly`,
+so it won't appear there and you'd get a cookie string that silently lacks it.
+
+The full walkthrough is in
+[`docs/downloading-and-zipping-manuals.md`](docs/downloading-and-zipping-manuals.md#3-authentication-important).
 
 ### Downloading more than one vehicle
 
@@ -206,17 +273,26 @@ Toyota/Lexus/Scion Workshop Manual Downloader
 
 Options
 
-  --manual -m RM12345          Required. Manual ID(s) to download. Use multiple times for multiple manuals.
-                               For non-electrical manuals, add @YEAR to the end to only download pages for
-                               that year.
-  --email -e me@example.com    Required. Your TIS email.
-  --password -p abc1234        Required. Your TIS password.
-  --cookie-string -c abc1234   Your TIS cookie string. If you don't know what this is, don't use it.
-  --headed -h                  Run in headed mode (show the emulated browser).
-  --help                       Print this usage guide.
+  --manual -m RM12345           Required. Manual ID(s) to download. Use
+                                multiple times for multiple manuals. For non-
+                                electrical manuals, add @YEAR to the end to
+                                only download pages for that year.
+  --cookie-string -c abc1234    Required. Your TIS session cookie (or set
+                                TIS_COOKIE). Copy the Cookie request header
+                                from a logged-in TIS page, or use yarn extract-
+                                cookie.
+  --email -e me@example.com     Legacy, no longer works. TIS replaced its one-
+                                shot login with a multi-step flow, so this
+                                cannot authenticate. Use --cookie-string.
+  --password -p abc1234         Legacy, no longer works. See --email.
+  --headed -h                   Run in headed mode (show the emulated browser).
+  --out-dir -o manuals/my_car   Directory to download into (default: manuals).
+                                Give each vehicle its own folder so multiple
+                                cars don't mix together.
+  --help                        Print this usage guide.
 ```
 
-- To use cookie-based authentication, copy the value of your Cookie header when visiting a manual page. If you're not sure what this is or how to do it, just use the email/password authentication method. When using cookie-based authentication, you don't need to specify an email or password, and your session will be preserved on the browser, so you can use TIS while the bot downloads manuals.
+- Cookie authentication is the only method that works against current TIS-- see [Authentication](#authentication). You can also set `TIS_COOKIE` in the environment instead of passing `-c`.
   - If you're on a POSIX system, consider wrapping your cookie string in single quotes to avoid the shell interpreting it.
 - Headed mode is not recommended for use. It requires the device you're using to have a display, and it's slower than headless mode.
 
@@ -247,14 +323,18 @@ would mean something has changed and is worth reporting as an issue.
 
 ### Which vehicles does this work with?
 
-All the ones I've tested. Just for fun, I tried:
+Originally tested on a 2005 / 2015 / 2017 Prius and a 2021 Tacoma.
 
-- 2005 Prius
-- 2015 Prius
-- 2017 Prius
-- 2021 Tacoma
+Since the TIS changes, these have been verified end to end, with every page
+checked against its table of contents:
 
-All worked flawlessly!
+| Vehicle | Publications | Result |
+| ------- | ------------ | ------ |
+| 2024 Lexus LX600 | RM, EWD, collision, new car features | 5,350 files, 100% |
+| 2008 Toyota FJ Cruiser | RM, EWD, collision, new car features, wire harness | 2,096 files, 100% |
+
+The FJ Cruiser also exercises the legacy path, where each page is a thin
+wrapper around a real PDF rather than HTML rendered by the browser.
 
 ### How do you avoid the one-session-at-a-time requirement when using Playwright _and_ axios?
 
@@ -265,7 +345,7 @@ to see the cookie-copying code.
 
 Since they're the same cookies, Toyota sees it as the same session.
 
-You can use your browser's Cookie header to log in instead of your email and password, but only do that if you know what that means. See [the command-line options](#all-command-line-options) for more info.
+These days you supply that cookie yourself rather than the tool logging in for you-- see [Authentication](#authentication).
 
 ### Why did you make this?
 

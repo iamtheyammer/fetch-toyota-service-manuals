@@ -46,6 +46,7 @@ Individual steps remain available: `yarn lookup-codes`, `yarn start`,
 
 - [Usage](#usage)
 - [Results (what do I get out of this?)](#results)
+- [Credits](#credits)
 - [FAQ](#faq)
 
 ## Usage
@@ -295,6 +296,36 @@ Options
 - Cookie authentication is the only method that works against current TIS-- see [Authentication](#authentication). You can also set `TIS_COOKIE` in the environment instead of passing `-c`.
   - If you're on a POSIX system, consider wrapping your cookie string in single quotes to avoid the shell interpreting it.
 - Headed mode is not recommended for use. It requires the device you're using to have a display, and it's slower than headless mode.
+
+## Credits
+
+This tool is [Sam Nolan's](https://github.com/iamtheyammer) work
+([iamtheyammer/fetch-toyota-service-manuals](https://github.com/iamtheyammer/fetch-toyota-service-manuals));
+everything below builds on it.
+
+TIS changed substantially after the original was written, and the fixes came
+from several people:
+
+- **[@maburlik](https://github.com/maburlik)** —
+  [#26](https://github.com/iamtheyammer/fetch-toyota-service-manuals/pull/26):
+  cookie authentication for the current multi-step TIS login, session-expiry
+  detection, resume support, legacy PDF manuals, multi-publication older
+  vehicles (`atm`/`cr`/`ncf`/`whr`), the `lookup-codes`, `download-documents`,
+  `extract-cookie` and `refresh-session` tools, several table-of-contents
+  data-loss fixes, and the download/archive guide. The bulk of what makes this
+  work against current TIS.
+- **[@nchen63](https://github.com/nchen63)** —
+  [#13](https://github.com/iamtheyammer/fetch-toyota-service-manuals/pull/13):
+  EWD parts. The downloader aborted whenever a part 404'd, which breaks
+  vehicles that only publish some parts.
+- **[@mrFatDZ](https://github.com/mrFatDZ)** —
+  [#9](https://github.com/iamtheyammer/fetch-toyota-service-manuals/pull/9):
+  body manuals moved from `bm/` to `cr/`.
+
+Later work in this fork: dependency modernization (ESM, Node-native
+TypeScript, current axios/Playwright/tough-cookie), removal of a process-wide
+TLS-verification bypass, an offline test suite, per-vehicle output
+directories, and the `fetch-vehicle`, `verify` and `archive` commands.
 
 ## FAQ
 

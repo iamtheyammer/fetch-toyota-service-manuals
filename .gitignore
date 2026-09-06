@@ -129,3 +129,12 @@ dist
 .DS_Store
 manuals/
 .idea/
+
+# TIS session credentials and captures.
+# The workflow has you save a session cookie and export a browser HAR, both of
+# which authenticate as you until they expire. Never let them be committed.
+*.har
+*.env
+!*.env.example
+tis.env
+.tis.env

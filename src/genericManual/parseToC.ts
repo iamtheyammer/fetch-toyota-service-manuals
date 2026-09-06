@@ -135,7 +135,7 @@ function getItemPath(
       } else {
         // if there are multiple subitems, we need to check which ones are applicable
         // item.item[0] should coorespond to subitemtocdatas[0], etc.
-        subitem = (item.item as ItemElement[]).filter((itm, idx) =>
+        subitem = (item.item as ItemElement[]).filter((_itm, idx) =>
           tocdataIsApplicable(subitemtocdatas[idx], year),
         );
 

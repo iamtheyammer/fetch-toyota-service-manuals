@@ -170,7 +170,11 @@ function typeLabel(type: string): string {
 }
 
 /** The exact downloader `-m` flag for a given objType + publication number. */
-function downloaderFlag(type: string, pub: string, year: string): string {
+export function downloaderFlag(
+  type: string,
+  pub: string,
+  year: string,
+): string {
   const upper2 = pub.slice(0, 2).toUpperCase();
   switch (type) {
     case "rm":

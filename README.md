@@ -19,6 +19,29 @@ These manuals are copyrighted by Toyota, so don't share them!
 > comparison), see
 > [`docs/downloading-and-zipping-manuals.md`](docs/downloading-and-zipping-manuals.md).
 
+## Quick start
+
+Once you have a TIS session cookie (see
+[`docs/downloading-and-zipping-manuals.md`](docs/downloading-and-zipping-manuals.md#3-authentication-important)),
+one command downloads everything for a vehicle, verifies it, and packages it:
+
+```bash
+export TIS_COOKIE='...'          # or pass --har ~/Downloads/techinfo.har
+yarn fetch-vehicle --division LEXUS --model LX600 --year 2024 --bulletins --archive
+```
+
+That looks up the vehicle's publication codes itself, downloads every manual
+into `manuals/lexus_lx600_2024/`, makes a second pass to pick up any pages that
+timed out, fetches the TSBs/bulletins, checks every page against the table of
+contents, and writes a `.tar.xz`.
+
+Model strings must match TIS exactly (`LX600`, `FJ Cruiser`). Get one wrong and
+the error lists every valid option for that division, so it is one retry rather
+than guesswork.
+
+Individual steps remain available: `yarn lookup-codes`, `yarn start`,
+`yarn download-documents`, `yarn verify`, `yarn archive`.
+
 ## Table of Contents
 
 - [Usage](#usage)
@@ -66,6 +89,14 @@ Since this project uses Playwright (a headless browser interop library), we'll n
 - `yarn typecheck` type-checks with `tsc`. There is no build step-- Node runs
   the TypeScript directly, so `tsc` is only a checker.
 - `yarn format` formats with Prettier.
+
+Other commands:
+
+- `yarn verify [--dir manuals/my_car]` checks every downloaded page against its
+  table of contents (and EWD figures against their title lists). Exits non-zero
+  if anything is missing, so it can gate a script.
+- `yarn archive --dir manuals/my_car` packages a vehicle as `.tar.xz`, choosing
+  xz settings that fit available memory.
 
 ### Get your car's manual IDs
 

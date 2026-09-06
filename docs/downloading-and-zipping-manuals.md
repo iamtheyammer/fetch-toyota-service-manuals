@@ -397,6 +397,19 @@ directory rather than on `manuals/` as a whole.
 
 ## 6. Verifying completeness
 
+Use the built-in checker, which walks every publication under a directory,
+compares it against its own table of contents (and EWD figures against their
+title lists), and flags both missing pages and files too small to be real:
+
+```bash
+yarn verify --dir manuals/lexus_lx600_2024
+```
+
+It exits non-zero when anything is missing, so it can gate an archive step.
+
+<details>
+<summary>Equivalent by hand</summary>
+
 Confirm every page in the (filtered) table of contents has a corresponding file:
 
 ```bash
@@ -419,6 +432,8 @@ Also sanity-check that no file is a tiny login-page stub:
 find manuals -type f ! -name index.html ! -name 'toc*' ! -name 'title.*' -size -512c
 # (no output = good)
 ```
+
+</details>
 
 ---
 
@@ -443,7 +458,25 @@ Measured on this corpus (~1.3 GB on disk):
 **Use `tar.xz` for the smallest footprint.** `xz -9e -T0` parallelizes across
 all cores; on a 24-core host the full set compresses in ~5 minutes.
 
-### Recommended: tar.xz (smallest)
+### Recommended: `yarn archive`
+
+```bash
+yarn archive --dir manuals/lexus_lx600_2024 --out ~/Documents/2024_Lexus_LX600.tar.xz
+```
+
+It streams the directory through xz, names the archive's top-level folder after
+the vehicle, and verifies the result with `xz -t`.
+
+Compression settings are chosen from free memory rather than hard-coded:
+`xz -9e -T0` wants roughly 700 MB per thread, so on a many-core machine it
+reaches for several gigabytes and will thrash or be OOM-killed on a busy
+desktop. Manual pages are already-compressed PDFs, so the stronger preset saves
+very little -- a real 873 MB vehicle packed to 612 MB at preset 6.
+
+<details>
+<summary>Equivalent by hand</summary>
+
+### tar.xz (smallest)
 
 `tar --transform` rewrites the stored top-level path, so no directory renaming is
 needed:
@@ -466,6 +499,8 @@ xz -t "$OUT" && echo "tar.xz OK"
 echo "archive: $(tar -tJf "$OUT" | grep -vc '/$')   disk: $(find manuals -type f | wc -l)"
 tar -tJf "$OUT" | head -1            # -> 2022_Toyota_Highlander_Service_Manuals/
 ```
+
+</details>
 
 ### Alternatives
 

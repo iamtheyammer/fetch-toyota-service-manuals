@@ -5,6 +5,7 @@ import { client } from "../api/client.ts";
 import parseToC, { type ParsedToC } from "../genericManual/parseToC.ts";
 import { looksLikeLoginPage, SessionExpiredError } from "../api/session.ts";
 import type { Manual } from "./types.ts";
+export { sanitizeName } from "./paths.ts";
 
 /**
  * Shared table-of-contents handling for both the modern (HTML) and legacy (PDF)
@@ -13,11 +14,6 @@ import type { Manual } from "./types.ts";
  * a single place, and lets the manual be fetched once per run rather than once
  * per detection plus once per download.
  */
-
-/** Make a ToC entry name safe to use as a single file/directory path segment. */
-export function sanitizeName(name: string): string {
-  return name.replace(/\//g, "-");
-}
 
 /**
  * Fetch a manual's table of contents, persist it (`toc-full.xml`,

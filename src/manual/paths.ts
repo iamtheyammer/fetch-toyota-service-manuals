@@ -23,3 +23,14 @@ export function manualDirPath(outDir: string, raw: string): string {
   // leading slash of an absolute outDir and silently write inside the repo.
   return resolve(outDir || DEFAULT_OUT_DIR, raw);
 }
+
+/**
+ * Make a ToC entry name safe to use as a single file/directory path segment.
+ *
+ * Pure path logic, kept here rather than alongside the ToC fetching so that
+ * verification (and anything else needing to predict a page's filename) does
+ * not have to import the HTTP client.
+ */
+export function sanitizeName(name: string): string {
+  return name.replace(/\//g, "-");
+}

@@ -39,11 +39,25 @@ export function vehicleSlug(
     .replace(/^_+|_+$/g, "");
 }
 
-/** Run a command, streaming its output, and resolve with its exit code. */
-function run(cmd: string, args: string[]): Promise<number> {
+/**
+ * Run a command, streaming its output, and resolve with its exit code.
+ *
+ * `extraEnv` matters: this tool may resolve the session cookie from a --har
+ * file, but the downloaders it spawns only read TIS_COOKIE (or their own
+ * --har). Without passing the resolved cookie down, every child exits with
+ * "Missing required args!" even though the lookup just succeeded.
+ */
+function run(
+  cmd: string,
+  args: string[],
+  extraEnv: NodeJS.ProcessEnv = {},
+): Promise<number> {
   return new Promise((resolve) => {
     console.log(`\n$ ${cmd} ${args.join(" ")}\n`);
-    const child = spawn(cmd, args, { stdio: "inherit", env: process.env });
+    const child = spawn(cmd, args, {
+      stdio: "inherit",
+      env: { ...process.env, ...extraEnv },
+    });
     child.on("close", (code) => resolve(code ?? 1));
   });
 }
@@ -132,7 +146,9 @@ async function main() {
   // files are skipped).
   for (let pass = 1; pass <= opts.passes; pass++) {
     console.log(`\n=== Manuals, pass ${pass}/${opts.passes} ===`);
-    const code = await run("node", ["src/index.ts", ...manualArgs]);
+    const code = await run("node", ["src/index.ts", ...manualArgs], {
+      TIS_COOKIE: cookieString,
+    });
     if (code === 2) {
       console.error(
         "\nTIS session expired. Capture a fresh cookie and re-run this same " +
@@ -149,17 +165,21 @@ async function main() {
   if (opts.bulletins) {
     for (let pass = 1; pass <= opts.passes; pass++) {
       console.log(`\n=== Bulletins, pass ${pass}/${opts.passes} ===`);
-      const code = await run("node", [
-        "tools/downloadDocuments.ts",
-        "--division",
-        opts.division,
-        "--model",
-        opts.model,
-        "--year",
-        opts.year,
-        "--out",
-        `${outDir}/_documents`,
-      ]);
+      const code = await run(
+        "node",
+        [
+          "tools/downloadDocuments.ts",
+          "--division",
+          opts.division,
+          "--model",
+          opts.model,
+          "--year",
+          opts.year,
+          "--out",
+          `${outDir}/_documents`,
+        ],
+        { TIS_COOKIE: cookieString },
+      );
       if (code === 2) {
         console.error("\nTIS session expired while fetching bulletins.");
         process.exit(2);

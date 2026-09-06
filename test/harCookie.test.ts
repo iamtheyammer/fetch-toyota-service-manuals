@@ -141,3 +141,85 @@ describe("emitCookie", () => {
     assert.equal(readFileSync(out, "utf8"), "TIS_COOKIE='TISESSIONID=ab'\n");
   });
 });
+
+describe("cookieStringFromHar across multiple sessions", () => {
+  // A HAR captured with DevTools "Preserve log" enabled (which the guide tells
+  // you to turn on) spans every session the browser had, including expired
+  // ones. Unioning cookies across the file replays cookies the browser has
+  // since stopped sending -- notably ForgeRock's agent-authn-tx-* transaction
+  // cookie from a previous login -- and TIS rejects the result as invalid.
+  const entryAt = (time: string, url: string, cookie: string) => ({
+    startedDateTime: time,
+    request: { url, headers: [{ name: "Cookie", value: cookie }] },
+  });
+
+  test("uses only the cookies from the most recent request", () => {
+    const har = harFile([
+      entryAt(
+        "2026-09-05T16:47:08.000-06:00",
+        "https://techinfo.toyota.com/a",
+        "TISESSIONID=yesterday; agent-authn-tx-OLD=stale; keep=1",
+      ),
+      entryAt(
+        "2026-09-06T08:29:14.000-06:00",
+        "https://techinfo.toyota.com/b",
+        "TISESSIONID=today; keep=1",
+      ),
+    ]);
+    const { cookieString, names } = cookieStringFromHar(har);
+    assert.ok(cookieString.includes("TISESSIONID=today"));
+    assert.ok(!cookieString.includes("yesterday"));
+    // The stale transaction cookie must not be replayed.
+    assert.ok(
+      !names.includes("agent-authn-tx-OLD"),
+      "stale cookie was included",
+    );
+    assert.deepEqual(names.sort(), ["TISESSIONID", "keep"]);
+  });
+
+  test("orders by timestamp, not file order", () => {
+    const har = harFile([
+      entryAt(
+        "2026-09-06T08:29:14.000-06:00",
+        "https://techinfo.toyota.com/b",
+        "TISESSIONID=newest",
+      ),
+      entryAt(
+        "2026-09-05T16:47:08.000-06:00",
+        "https://techinfo.toyota.com/a",
+        "TISESSIONID=older; junk=1",
+      ),
+    ]);
+    const { cookieString } = cookieStringFromHar(har);
+    assert.ok(cookieString.includes("TISESSIONID=newest"));
+    assert.ok(!cookieString.includes("junk"));
+  });
+
+  test("falls back to file order when entries carry no timestamp", () => {
+    const har = harFile([
+      entry("https://techinfo.toyota.com/a", "TISESSIONID=first"),
+      entry("https://techinfo.toyota.com/b", "TISESSIONID=last"),
+    ]);
+    assert.ok(
+      cookieStringFromHar(har).cookieString.includes("TISESSIONID=last"),
+    );
+  });
+
+  test("skips a most-recent request that has no TISESSIONID", () => {
+    // Some late requests (static assets) go out without the session cookie.
+    const har = harFile([
+      entryAt(
+        "2026-09-06T08:00:00.000-06:00",
+        "https://techinfo.toyota.com/a",
+        "TISESSIONID=real; helper=1",
+      ),
+      entryAt(
+        "2026-09-06T08:30:00.000-06:00",
+        "https://techinfo.toyota.com/img",
+        "anon=1",
+      ),
+    ]);
+    const { cookieString } = cookieStringFromHar(har);
+    assert.ok(cookieString.includes("TISESSIONID=real"));
+  });
+});

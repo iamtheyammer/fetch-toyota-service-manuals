@@ -226,10 +226,21 @@ export async function collectDocuments(
     // Fail fast with a clear message if the session is dead (expired, or bumped
     // by a concurrent login) -- otherwise the form selects never appear and we
     // would time out cryptically.
-    if (/concurrentLoginFailure|custom-login|\/login/i.test(page.url())) {
+    if (/concurrentLoginFailure/i.test(page.url())) {
+      // Distinct from expiry, and fixed differently: TIS allows one session per
+      // account, and a browser tab left open on TIS keeps rotating the session
+      // id, so a cookie captured moments earlier is already superseded.
       throw new Error(
-        "TIS session is not valid (expired, or bumped by a concurrent login). " +
-          "Capture a fresh HAR while logged in, with no other TIS sessions open.",
+        "TIS reports a concurrent login: another session is active for this " +
+          "account, so the captured cookie is no longer the current one.\n" +
+          "Close every TIS tab in your browser (do not log out -- that ends " +
+          "the session), then capture the cookie again and re-run promptly.",
+      );
+    }
+    if (/custom-login|\/login/i.test(page.url())) {
+      throw new Error(
+        "TIS session is not valid (expired or never authenticated). " +
+          "Capture a fresh cookie while logged in and re-run.",
       );
     }
 

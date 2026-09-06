@@ -20,7 +20,23 @@ export function cookieStringFromHar(harPath: string): {
   names: string[];
 } {
   const har = JSON.parse(readFileSync(harPath, "utf8"));
-  const jar: Record<string, string> = {};
+
+  // Collect one candidate cookie set per TIS request, newest last.
+  //
+  // Deliberately NOT a union across the whole file. A HAR captured with
+  // DevTools "Preserve log" enabled spans every session the browser has had,
+  // including expired ones, and a union replays cookies the browser has since
+  // stopped sending -- in particular ForgeRock's `agent-authn-tx-*` login
+  // transaction cookie from a previous session. TIS rejects the resulting
+  // mixture as an invalid session even though TISESSIONID itself is current.
+  // The browser's most recent request is the authoritative cookie state.
+  const candidates: {
+    time: string;
+    order: number;
+    jar: Record<string, string>;
+  }[] = [];
+
+  let order = 0;
   for (const entry of har.log?.entries ?? []) {
     let host = "";
     try {
@@ -32,22 +48,38 @@ export function cookieStringFromHar(harPath: string): {
     const header = (entry.request.headers ?? []).find(
       (h: any) => h.name.toLowerCase() === "cookie",
     );
-    if (header?.value) {
-      for (const pair of String(header.value).split(/;\s*/)) {
-        const eq = pair.indexOf("=");
-        if (eq > 0) jar[pair.slice(0, eq)] = pair.slice(eq + 1);
-      }
+    if (!header?.value) continue;
+
+    const jar: Record<string, string> = {};
+    for (const pair of String(header.value).split(/;\s*/)) {
+      const eq = pair.indexOf("=");
+      if (eq > 0) jar[pair.slice(0, eq)] = pair.slice(eq + 1);
     }
+    candidates.push({ time: entry.startedDateTime ?? "", order: order++, jar });
   }
 
-  const names = Object.keys(jar);
-  if (!names.includes("TISESSIONID")) {
+  // Sort by capture time where the HAR provides it, else keep file order.
+  candidates.sort((a, b) =>
+    a.time && b.time
+      ? a.time.localeCompare(b.time) || a.order - b.order
+      : a.order - b.order,
+  );
+
+  // Walk backwards to the newest request that actually carried a session:
+  // late requests for static assets can go out without one.
+  const withSession = candidates.filter((c) => "TISESSIONID" in c.jar);
+  const chosen = withSession[withSession.length - 1];
+
+  if (!chosen) {
     throw new Error(
-      `No TISESSIONID cookie found in ${harPath} -- is it a logged-in TIS session capture?`,
+      `No TISESSIONID cookie found in ${harPath} -- is it a logged-in TIS session capture? ` +
+        `(Chromium-based browsers strip cookies from HAR exports by default; Firefox does not.)`,
     );
   }
+
+  const names = Object.keys(chosen.jar);
   return {
-    cookieString: names.map((n) => `${n}=${jar[n]}`).join("; "),
+    cookieString: names.map((n) => `${n}=${chosen.jar[n]}`).join("; "),
     names,
   };
 }

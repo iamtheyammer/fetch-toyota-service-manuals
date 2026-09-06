@@ -1,6 +1,6 @@
 import processCLIArgs, { type CLIArgs } from "./processCLIArgs.ts";
 import login from "./api/login.ts";
-import { join, resolve } from "path";
+import { join } from "path";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import downloadEWD from "./ewd/index.ts";
 import downloadGenericManual from "./genericManual/index.ts";
@@ -14,6 +14,7 @@ import { addCookiesToJar, parseCookieString } from "./api/cookies.ts";
 import { SessionExpiredError } from "./api/session.ts";
 import dayjs from "dayjs";
 import type { Manual } from "./manual/types.ts";
+import { manualDirPath } from "./manual/paths.ts";
 
 /** All accepted explicit `-m <type>:<id>` type prefixes. */
 const MANUAL_TYPES = [
@@ -50,7 +51,14 @@ function autodetectType(id: string): "em" | "rm" | "cr" | undefined {
   }
 }
 
-async function run({ manual, email, password, headed, cookieString }: CLIArgs) {
+async function run({
+  manual,
+  email,
+  password,
+  headed,
+  cookieString,
+  outDir,
+}: CLIArgs) {
   // sort manuals and make sure that they're valid (ish)
   const ewds: Manual[] = [];
   const genericManuals: Manual[] = [];
@@ -133,7 +141,7 @@ async function run({ manual, email, password, headed, cookieString }: CLIArgs) {
   const dirPaths: { [manualId: string]: string } = Object.fromEntries(
     [...ewds, ...genericManuals].map((m) => [
       m.id,
-      resolve(join(".", "manuals", m.raw)),
+      manualDirPath(outDir, m.raw),
     ]),
   );
 

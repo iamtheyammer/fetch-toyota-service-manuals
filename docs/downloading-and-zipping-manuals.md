@@ -380,6 +380,21 @@ end — resume re-fetches only those missing pages.
 
 ---
 
+### 5.4 Downloading more than one vehicle
+
+Everything lands in `manuals/` by default, which mixes publications together
+once you download a second car. `-o` / `--out-dir` gives each vehicle its own
+folder:
+
+```bash
+yarn start -o manuals/toyota_fj_cruiser -m RM12345 -m EM12345
+```
+
+The verification and archive steps below then operate on that per-vehicle
+directory rather than on `manuals/` as a whole.
+
+---
+
 ## 6. Verifying completeness
 
 Confirm every page in the (filtered) table of contents has a corresponding file:

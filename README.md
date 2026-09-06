@@ -111,6 +111,20 @@ you log in while it's downloading you'll have to start over. If you know what yo
 
 You can find your downloaded manuals at `manuals/MANUALID`.
 
+### Downloading more than one vehicle
+
+By default every publication is written straight into `manuals/`, so a second
+car's manuals sit alongside the first's with nothing to say which car they
+belong to. Use `-o` / `--out-dir` to give each vehicle its own folder:
+
+```bash
+yarn start -o manuals/toyota_fj_cruiser -m RM12345 -m EM12345
+yarn start -o manuals/lexus_lx600_2024  -m RM3900U@2024 -m EM3900U
+```
+
+Those land in `manuals/toyota_fj_cruiser/RM12345`, and so on. The default is
+unchanged, so existing commands behave exactly as before.
+
 ## Results
 
 This bot downloads all manual IDs you specified. It supports manual IDs starting with `RM`, `EM`, and `BM`.

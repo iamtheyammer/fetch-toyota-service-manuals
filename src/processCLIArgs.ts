@@ -1,5 +1,6 @@
 import commandLineArgs from "command-line-args";
 import commandLineUsage from "command-line-usage";
+import { DEFAULT_OUT_DIR } from "./manual/paths.ts";
 
 export interface CLIArgs {
   manual: string[];
@@ -7,6 +8,7 @@ export interface CLIArgs {
   password: string;
   headed: boolean;
   cookieString?: string;
+  outDir: string;
 }
 
 export default function processCLIArgs(): CLIArgs {
@@ -36,6 +38,11 @@ export default function processCLIArgs(): CLIArgs {
     {
       name: "cookie-string",
       alias: "c",
+      type: String,
+    },
+    {
+      name: "out-dir",
+      alias: "o",
       type: String,
     },
     {
@@ -81,6 +88,12 @@ export default function processCLIArgs(): CLIArgs {
           description: "Run in headed mode (show the emulated browser).",
         },
         {
+          name: "out-dir -o",
+          typeLabel: "{underline manuals/my_car}",
+          description:
+            "Directory to download into (default: {underline manuals}). Give each vehicle its own folder so multiple cars don't mix together.",
+        },
+        {
           name: "help",
           typeLabel: " ",
           description: "Print this usage guide.",
@@ -116,6 +129,7 @@ export default function processCLIArgs(): CLIArgs {
       password,
       headed: options.headed,
       cookieString,
+      outDir: options["out-dir"] || DEFAULT_OUT_DIR,
     };
   } catch (e: any) {
     console.error(e);

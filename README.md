@@ -207,6 +207,18 @@ cookie your browser is using.
 Don't use `document.cookie` in the console: the session cookie is `httpOnly`,
 so it won't appear there and you'd get a cookie string that silently lacks it.
 
+**Close the browser once you have the cookie, before starting a download.**
+Not log out -- that ends the session you just captured. Just close it.
+
+TIS allows one session per account, and a TIS page left open keeps refreshing
+and rotating the session id in the background. The tool goes on presenting the
+id you captured, TIS treats that as a second login, and from then on it answers
+**HTTP 200 with a "Concurrent Login Alert" page at each requested page's own
+URL**. Those render to perfectly valid PDFs, so a run can appear to finish
+while the pages are copies of a warning notice. The tool now detects this and
+stops, and `yarn verify` finds any already on disk, but closing the browser
+avoids it entirely.
+
 The full walkthrough is in
 [`docs/downloading-and-zipping-manuals.md`](docs/downloading-and-zipping-manuals.md#3-authentication-important).
 

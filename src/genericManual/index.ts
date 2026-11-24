@@ -4,7 +4,9 @@ import { mkdir, writeFile } from "fs/promises";
 import { join } from "path";
 import parseToC, { ParsedToC } from "./parseToC";
 import { Page } from "playwright";
+import { existsSync } from "fs";
 import { Manual } from "..";
+import sanitizeFilename from "../sanitizeFilename";
 
 export default async function downloadGenericManual(
   page: Page,
@@ -67,8 +69,14 @@ async function recursivelyDownloadManual(
     const [name, value] = exploded[explIdx];
 
     if (typeof value === "string") {
-      const sanitizedName = name.replace(/\//g, "-");
+      const sanitizedName = sanitizeFilename(name);
       const sanitizedPath = `${join(path, sanitizedName)}.pdf`;
+
+      // Skip pages we already have so re-running only fetches what's missing.
+      if (existsSync(sanitizedPath)) {
+        continue;
+      }
+
       console.log(`Downloading page ${sanitizedName}...`);
 
       // download page
@@ -100,7 +108,7 @@ async function recursivelyDownloadManual(
     // we're not at the bottom of the tree, continue
 
     // create folder
-    const newPath = join(path, name.replace(/\//g, "-"));
+    const newPath = join(path, sanitizeFilename(name));
     if (newPath.includes("undefined")) debugger;
     try {
       await mkdir(newPath, { recursive: true });

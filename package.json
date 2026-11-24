@@ -13,6 +13,7 @@
     "command-line-args": "^5.2.1",
     "command-line-usage": "^6.1.3",
     "dayjs": "^1.11.2",
+    "pdf-parse": "^2.4.5",
     "playwright": "^1.22.2",
     "tough-cookie": "^4.0.0",
     "xml-js": "^1.6.11"
@@ -30,6 +31,7 @@
   },
   "scripts": {
     "start": "NODE_TLS_REJECT_UNAUTHORIZED=0 ts-node src/index.ts",
+    "build-index": "ts-node src/buildIndex/cli.ts",
     "start:inspect": "NODE_TLS_REJECT_UNAUTHORIZED=0 node -r ts-node/register --inspect-brk src/index.ts",
     "format": "prettier --write src/**/*.ts",
     "playwright-setup": "playwright install chromium && playwright install-deps chromium",

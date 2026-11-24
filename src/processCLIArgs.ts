@@ -57,7 +57,7 @@ export default function processCLIArgs(): CLIArgs {
           name: "manual -m",
           typeLabel: "{underline RM12345}",
           description:
-            "{bold Required.} Manual ID(s) to download. Use multiple times for multiple manuals. For non-electrical manuals, add @YEAR to the end to only download pages for that year.",
+            "{bold Required.} Manual ID(s) to download. Use multiple times for multiple manuals. For non-electrical manuals, add @YEAR to the end to only download pages for that year. If a manual's TIS URL uses a directory that doesn't match its ID prefix (e.g. {underline dir=cr/BM3150U}), pass it as {underline type/id}, e.g. {underline cr/BM3150U}.",
         },
         {
           name: "email -e",

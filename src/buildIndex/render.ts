@@ -46,6 +46,13 @@ const STYLE = `
   #bar { padding: 6px 12px; border-bottom: 1px solid #e3e3e3; font-size: 13px; color: #555;
     display: flex; gap: 12px; align-items: center; }
   #bar #open { margin-left: auto; }
+  #refs { border-bottom: 1px solid #e3e3e3; background: #fbfbfd; max-height: 150px;
+    overflow: auto; padding: 6px 12px 8px; }
+  #refs .rhdr { font-size: 11px; text-transform: uppercase; letter-spacing: .04em;
+    color: #888; margin-bottom: 4px; }
+  #refs a { display: block; padding: 3px 6px; border-radius: 4px; color: #0a58ca;
+    text-decoration: none; font-size: 13px; word-break: break-word; }
+  #refs a:hover { background: #e9f0fe; }
   #viewer { flex: 1; border: 0; width: 100%; background: #fff; }
 `;
 
@@ -55,12 +62,36 @@ const SCRIPT = `
   var resultsEl = document.getElementById('results');
   var viewer = document.getElementById('viewer');
   var openLink = document.getElementById('open');
+  var refsEl = document.getElementById('refs');
   var current = null;
+
+  // Show the local pages this document cross-references (its "INFO" links),
+  // from the prebuilt window.__REFS__. Browsers block the in-PDF links from
+  // reaching local files, so this panel is the offline way to follow them.
+  function renderRefs(href) {
+    var map = window.__REFS__ || {};
+    var list = map[href];
+    refsEl.textContent = '';
+    if (!list || !list.length) { refsEl.classList.add('hidden'); return; }
+    var hdr = document.createElement('div');
+    hdr.className = 'rhdr';
+    hdr.textContent = 'Referenced in this page (' + list.length + ')';
+    refsEl.appendChild(hdr);
+    list.forEach(function (r) {
+      var a = document.createElement('a');
+      a.href = r.href;
+      a.textContent = r.title;
+      a.addEventListener('click', function (e) { e.preventDefault(); openDoc(r.href); });
+      refsEl.appendChild(a);
+    });
+    refsEl.classList.remove('hidden');
+  }
 
   function openDoc(href) {
     viewer.src = href;
     openLink.href = href;
     openLink.classList.remove('hidden');
+    renderRefs(href);
   }
   function select(el, href) {
     if (current) current.classList.remove('active');
@@ -220,11 +251,13 @@ export function renderManualPage(title: string, tree: TreeNode[]): string {
   <section id="main">
     <div id="bar"><span>Select a page to view it here.</span>
       <a id="open" class="hidden" target="_blank" rel="noopener">open in new tab ↗</a></div>
+    <div id="refs" class="hidden"></div>
     <iframe id="viewer" title="document"></iframe>
   </section>
 </div>
 <script>window.__TREE__ = ${embed(tree)};</script>
-<script src="search-index.js"></script>`;
+<script src="search-index.js"></script>
+<script src="refs-index.js"></script>`;
   return page(title, "", body, SCRIPT);
 }
 

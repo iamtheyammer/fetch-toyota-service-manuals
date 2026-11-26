@@ -4,6 +4,7 @@ import { collectGenericTree, TreeNode } from "./tree";
 import { collectEwdTree } from "./ewd";
 import { renderManualPage, renderMasterPage } from "./render";
 import { buildSearchIndex, renderSearchIndexJs } from "./searchIndex";
+import { buildRefsAndRelink, renderRefsIndexJs } from "./relink";
 
 const EWD_PARTS = ["system", "routing", "overall"];
 
@@ -18,16 +19,18 @@ function isEwd(manualDir: string): boolean {
  * Returns the folder name and the list of referenced files not found on disk.
  */
 export async function buildManualIndex(
-  manualDir: string
-): Promise<{ label: string; missing: string[] } | null> {
+  manualDir: string,
+  opts: { relinkPdfs?: boolean } = {}
+): Promise<{ label: string; missing: string[]; relinked: number } | null> {
   const label = basename(manualDir);
   let tree: TreeNode[];
   let missing: string[];
+  let toc: unknown = null;
 
   if (isEwd(manualDir)) {
     ({ root: tree, missing } = collectEwdTree(manualDir));
   } else if (existsSync(join(manualDir, "toc-downloaded.json"))) {
-    const toc = JSON.parse(readFileSync(join(manualDir, "toc-downloaded.json"), "utf8"));
+    toc = JSON.parse(readFileSync(join(manualDir, "toc-downloaded.json"), "utf8"));
     ({ root: tree, missing } = collectGenericTree(toc, manualDir));
   } else {
     return null;
@@ -39,7 +42,19 @@ export async function buildManualIndex(
   const entries = await buildSearchIndex(manualDir, tree);
   writeFileSync(join(manualDir, "search-index.js"), renderSearchIndexJs(entries));
 
-  return { label, missing };
+  // Cross-reference index: maps each generic page's in-document "INFO" links to
+  // the local pages they point at (and, with relinkPdfs, rewrites them in-PDF).
+  // EWD manuals have no such links, so they just get an empty sibling script.
+  let relinked = 0;
+  if (toc) {
+    ({ relinked } = await buildRefsAndRelink(manualDir, toc, tree, {
+      relinkPdfs: !!opts.relinkPdfs,
+    }));
+  } else {
+    writeFileSync(join(manualDir, "refs-index.js"), renderRefsIndexJs({}));
+  }
+
+  return { label, missing, relinked };
 }
 
 /**
@@ -47,8 +62,9 @@ export async function buildManualIndex(
  * a master `index.html` listing them. Needs no network or cookie. Logs a summary.
  */
 export async function buildAllIndexes(
-  manualsDir: string
-): Promise<{ total: number; missing: number }> {
+  manualsDir: string,
+  opts: { relinkPdfs?: boolean } = {}
+): Promise<{ total: number; missing: number; relinked: number }> {
   const dirs = readdirSync(manualsDir).filter((name) => {
     try {
       return statSync(join(manualsDir, name)).isDirectory();
@@ -60,11 +76,12 @@ export async function buildAllIndexes(
   const built: { label: string; href: string }[] = [];
   let total = 0;
   let missing = 0;
+  let relinked = 0;
 
   for (const name of dirs) {
-    let res: { label: string; missing: string[] } | null;
+    let res: { label: string; missing: string[]; relinked: number } | null;
     try {
-      res = await buildManualIndex(join(manualsDir, name));
+      res = await buildManualIndex(join(manualsDir, name), opts);
     } catch (e) {
       // One corrupt/partial source folder (bad JSON, truncated gzip) must not
       // sink the rest of the run or the master index.
@@ -74,16 +91,21 @@ export async function buildAllIndexes(
     if (!res) continue;
     total++;
     missing += res.missing.length;
+    relinked += res.relinked;
     built.push({ label: res.label, href: encodeURIComponent(name) + "/index.html" });
     console.log(
       `${res.label}: index built${
         res.missing.length ? ` (⚠ ${res.missing.length} missing file(s))` : ""
-      }`
+      }${res.relinked ? ` (${res.relinked} in-PDF link(s) re-linked)` : ""}`
     );
     for (const m of res.missing) console.log(`    missing: ${m}`);
   }
 
   writeFileSync(join(manualsDir, "index.html"), renderMasterPage(built));
-  console.log(`\n${total} manual(s) indexed, ${missing} missing link(s) total.`);
-  return { total, missing };
+  console.log(
+    `\n${total} manual(s) indexed, ${missing} missing link(s) total${
+      opts.relinkPdfs ? `, ${relinked} in-PDF link(s) re-linked` : ""
+    }.`
+  );
+  return { total, missing, relinked };
 }

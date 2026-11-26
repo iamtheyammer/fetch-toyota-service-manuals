@@ -144,8 +144,9 @@ downloaded equivalent at `manuals/MANUALID/Engine-Hybrid System/1AB-CDE COOLING/
 For non-electrical manuals, you'll see two "toc" (table of contents) files. `toc-full.xml` contains all of the possible pages in the manual. `toc-downloaded.json` contains the _filtered_ version, if you filtered by year (if you didn't filter by year, it contains all pages). This is useful if you want to see what pages are available for your car (xml) or what the bot downloaded (json). 
 
 Each manual folder also gets an `index.html` — the [offline manual browser](#offline-manual-browser) — along
-with `search-index.js` (the extracted full-text search data it loads) and `.search-cache.json` (a cache that
-makes `yarn build-index` re-runs fast). `toc.js` is also written, for reference.
+with `search-index.js` (the extracted full-text search data it loads), `refs-index.js` (the map of each
+page's in-document cross-references to your local copies), and the `.search-cache.json` / `.refs-cache.json`
+caches that make `yarn build-index` re-runs fast. `toc.js` is also written, for reference.
 
 ## Offline manual browser
 
@@ -156,7 +157,9 @@ Every download produces a self-contained `index.html` at the root of each manual
   _inside_ the documents** (not just page names). Matching pages are listed with a snippet of the hit;
   click one to open it.
 - **Right:** click any page and its PDF — or, for wiring diagrams, the SVG — opens right there. There's an
-  "open in new tab" link too.
+  "open in new tab" link too. When the open page cross-references other pages (its in-document _INFO_ links),
+  a **"Referenced in this page"** strip appears above the viewer listing those targets as links to your local
+  copies — click one to jump straight to it.
 
 There's also a master `manuals/index.html` that links every manual you've downloaded, so you can jump
 between cars from one page.
@@ -170,6 +173,19 @@ the browser (loaded locally, still no internet). The first build of a large manu
 while it reads every PDF; the text is cached (`.search-cache.json`), so later `yarn build-index` runs only
 re-read new or changed pages. Wiring diagrams (SVG) are searchable by title only, not by their internal
 text.
+
+**Local cross-references.** Toyota manual pages link to each other through in-document _INFO_ boxes that
+normally point back to TIS. At build time the generator reads each page's links and, for every one that
+targets a page you've downloaded, records the local file — written to a sibling `refs-index.js` (cached in
+`.refs-cache.json`). The offline browser uses this to show the "Referenced in this page" panel described
+above. Chrome, Edge and other browsers [intentionally block](https://issues.chromium.org/issues/40082882)
+the links _inside_ a PDF from opening local files, which is why this panel lives in the page around the PDF
+rather than in it.
+
+If you read the manuals in **Adobe Acrobat/Reader** instead, run `yarn build-index --relink-pdfs`: it also
+rewrites the links inside each PDF to relative local paths (`GoToR` actions), so the actual INFO boxes open
+the local document in Adobe. This modifies the downloaded PDFs in place (re-run a download to restore an
+original); it has no effect in a browser, which blocks those links regardless.
 
 ### Rebuilding the browser (e.g. for older downloads)
 
@@ -244,6 +260,14 @@ versus [upstream](https://github.com/iamtheyammer/fetch-toyota-service-manuals):
   text at build time (cached for fast rebuilds) into a local `search-index.js`. Regenerate for existing
   downloads with `yarn build-index`. Wiring-diagram SVGZ files are written out as `.svg` so they render from
   `file://`. _(`src/buildIndex/`, `src/index.ts`, adds the `pdf-parse` dependency, replaces `accessor/`)_
+- **Local cross-references ("INFO" links).** Manual pages contain in-document links (the blue _INFO_ boxes)
+  that point back to TIS. The offline browser now shows a **"Referenced in this page"** panel above the
+  viewer, listing those cross-references as links to your _local_ copies — click one to open it. (Browsers
+  deliberately block the links _inside_ a PDF from reaching local files, so this panel is the reliable way to
+  follow them offline.) Optionally, `yarn build-index --relink-pdfs` also rewrites the links inside the PDFs
+  themselves to relative local paths, which makes the actual INFO boxes open the local document **in Adobe
+  Acrobat/Reader** (not in a browser). Both are driven by a per-manual `refs-index.js`, cached in
+  `.refs-cache.json`. _(`src/buildIndex/relink.ts`, `src/buildIndex/`, adds the `pdf-lib` dependency)_
 
 ## FAQ
 

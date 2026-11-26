@@ -1,15 +1,16 @@
 import processCLIArgs, {CLIArgs} from "./processCLIArgs";
 import login from "./api/login";
 import {join, resolve} from "path";
-import {mkdir, readFile, writeFile} from "fs/promises";
+import {mkdir} from "fs/promises";
 import downloadEWD from "./ewd";
 import downloadGenericManual from "./genericManual";
+import {buildAllIndexes} from "./buildIndex";
 import {chromium, Cookie} from "playwright";
 import {jar} from "./api/client";
 import dayjs from "dayjs";
 
 export interface Manual {
-  type: "em" | "rm" | "bm";
+  type: "em" | "rm" | "bm" | "cr";
   id: string; // e.g. EM1234
   year?: number; // e.g. 2019
   raw: string; // e.g. EM1234@2019
@@ -24,8 +25,17 @@ async function run({manual, email, password, headed, cookieString}: CLIArgs) {
 
   console.log("Parsing manual IDs...");
   rawManualIds.forEach((m) => {
-    const id = m.includes("@") ? m.split("@")[0] : m;
-    const year = m.includes("@") ? parseInt(m.split("@")[1]) : undefined;
+    // Optional explicit directory/type, mirroring the `dir=` segment in a TIS
+    // viewer URL (e.g. `cr/BM3150U`). Toyota sometimes serves a publication under
+    // a directory that doesn't match its ID's prefix -- for example BM3150U lives
+    // under `cr`, not `bm` -- so this lets you override the path the tool fetches.
+    const slashIdx = m.indexOf("/");
+    const explicitType =
+      slashIdx === -1 ? undefined : m.slice(0, slashIdx).toLowerCase();
+    const spec = slashIdx === -1 ? m : m.slice(slashIdx + 1);
+
+    const id = spec.includes("@") ? spec.split("@")[0] : spec;
+    const year = spec.includes("@") ? parseInt(spec.split("@")[1]) : undefined;
 
     if (year && year !== -1) {
       if (isNaN(year)) {
@@ -38,13 +48,28 @@ async function run({manual, email, password, headed, cookieString}: CLIArgs) {
       }
     }
 
-    switch (m.slice(0, 2).toUpperCase()) {
+    // An explicit type (e.g. `cr/BM3150U`) overrides prefix-based detection.
+    if (explicitType) {
+      if (explicitType === "em") {
+        ewds.push({ type: "em", id, year, raw: spec });
+      } else {
+        genericManuals.push({
+          type: explicitType as Manual["type"],
+          id,
+          year,
+          raw: spec,
+        });
+      }
+      return;
+    }
+
+    switch (id.slice(0, 2).toUpperCase()) {
       case "EM": {
         ewds.push({
           type: "em",
           id,
           year,
-          raw: m,
+          raw: spec,
         });
         return;
       }
@@ -53,7 +78,7 @@ async function run({manual, email, password, headed, cookieString}: CLIArgs) {
           type: "rm",
           id,
           year,
-          raw: m,
+          raw: spec,
         });
         return;
       }
@@ -62,13 +87,22 @@ async function run({manual, email, password, headed, cookieString}: CLIArgs) {
           type: "bm",
           id,
           year,
-          raw: m,
+          raw: spec,
+        });
+        return;
+      }
+      case "CR": {
+        genericManuals.push({
+          type: "cr",
+          id,
+          year,
+          raw: spec,
         });
         return;
       }
       default: {
         console.error(
-          `Invalid manual ${m}: manual IDs must start with EM, RM, or BM.`
+          `Invalid manual ${m}: manual IDs must start with EM, RM, BM, or CR (or use type/id, e.g. cr/BM3150U).`
         );
         process.exit(1);
       }
@@ -92,16 +126,6 @@ async function run({manual, email, password, headed, cookieString}: CLIArgs) {
       console.error(`Error creating directory: ${e}`);
       process.exit(1);
     }
-  }
-
-  // copy accessor into manuals
-  console.log("Copying accessor into manuals...")
-  try {
-    const accessorHTML = await readFile(join(__dirname, "..", "accessor/index.html"), "utf-8");
-    await Promise.all(
-      Object.values(dirPaths).map((m) => writeFile(join(m, "index.html"), accessorHTML)));
-  } catch (e) {
-    console.error("Unable to copy accessor file into manuals.", e)
   }
 
   console.log("Setting up Playwright...");
@@ -209,6 +233,12 @@ async function run({manual, email, password, headed, cookieString}: CLIArgs) {
   }
 
   console.log("All manuals downloaded!");
+
+  // Generate the offline two-pane browser (index.html) for every manual, plus a
+  // master manuals/index.html. Runs over all downloads present, needs no network.
+  console.log("Building offline browser index...");
+  await buildAllIndexes(resolve(join(".", "manuals")));
+
   process.exit(0);
 }
 
